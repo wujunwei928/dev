@@ -58,6 +58,6 @@ var wordCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(wordCmd)
 
-	wordCmd.Flags().StringVarP(&wordStr, "wordStr", "s", "", "请输入单词内容")
-	wordCmd.Flags().Int8VarP(&wordMode, "wordMode", "m", 0, "请输入单词转化的模式")
+	wordCmd.Flags().StringVarP(&wordStr, "str", "s", "", "请输入单词内容")
+	wordCmd.Flags().Int8VarP(&wordMode, "mode", "m", 0, "请输入单词转化的模式")
 }
