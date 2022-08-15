@@ -3,9 +3,9 @@ package cmd
 import (
 	"log"
 
-	"github.com/wujunwei928/bd/internal/search"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"github.com/wujunwei928/bd/internal/search"
 )
 
 var searchStr string
@@ -17,6 +17,9 @@ var searchCmd = &cobra.Command{
 	Short: "搜索",
 	Long:  search.FormatCommandDesc(),
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(searchMode) <= 0 {
+			searchMode = viper.GetString("default_search_engine")
+		}
 		searchUrl := search.FormatSearchUrl(searchMode, searchStr)
 		err := search.Open(searchUrl)
 		if err != nil {
