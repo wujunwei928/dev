@@ -7,16 +7,18 @@ import (
 	"encoding/hex"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 const (
-	EncodeTypeMd5    = "md5"    // md5加密
-	EncodeTypeSha1   = "sha1"   // sha1加密
-	EncodeTypeBase64 = "base64" // base64加密
-	EncodeTypeUrl    = "url"    // urlencode
+	EncodeTypeMd5     = "md5"     // md5加密
+	EncodeTypeSha1    = "sha1"    // sha1加密
+	EncodeTypeBase64  = "base64"  // base64加密
+	EncodeTypeUrl     = "url"     // urlencode
+	EncodeTypeUnicode = "unicode" // unicode
 )
 
 var encodeDesc = strings.Join([]string{
@@ -25,6 +27,7 @@ var encodeDesc = strings.Join([]string{
 	EncodeTypeSha1 + "：sha1加密",
 	EncodeTypeBase64 + "：base64加密",
 	EncodeTypeUrl + "：url加密",
+	EncodeTypeUnicode + "：unicode加密",
 }, "\n")
 
 var encodeStr string
@@ -51,6 +54,8 @@ var encodeCmd = &cobra.Command{
 			// 注意: 如果字符串中含有&, 主要用双引号 "a=1&b=2", 否则&后的字符会丢失
 			content = url.QueryEscape(encodeStr)
 			//fmt.Println(encodeStr, content)
+		case EncodeTypeUnicode:
+			content = strconv.QuoteToASCII(encodeStr)
 		default:
 			log.Fatalf("暂不支持该加密模式, 请执行 help encode 查看帮助文档")
 		}

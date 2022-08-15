@@ -4,20 +4,23 @@ import (
 	"encoding/base64"
 	"log"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
 const (
-	DecodeTypeBase64 = "base64" // base64解密
-	DecodeTypeUrl    = "url"    // urldecode
+	DecodeTypeBase64  = "base64"  // base64解密
+	DecodeTypeUrl     = "url"     // urldecode
+	DecodeTypeUnicode = "unicode" // unicode
 )
 
 var decodeDesc = strings.Join([]string{
 	"该子命令支持各种解密，模式如下：",
 	DecodeTypeBase64 + "：base64解密",
 	DecodeTypeUrl + "：url解密",
+	DecodeTypeUnicode + "：unicode解密",
 }, "\n")
 
 var decodeStr string
@@ -38,11 +41,21 @@ var decodeCmd = &cobra.Command{
 			}
 			content = string(decodeByte)
 		case DecodeTypeUrl:
-			decodeStr, err := url.QueryUnescape(decodeStr)
+			s, err := url.QueryUnescape(decodeStr)
 			if err != nil {
 				log.Fatalf("url decode fail: %s", err.Error())
 			}
-			content = decodeStr
+			content = s
+		case DecodeTypeUnicode:
+			// unicode转换中文需要的格式 "内容" , 注意要传双引号
+			if !strings.Contains(decodeStr, `"`) {
+				decodeStr = `"` + decodeStr + `"`
+			}
+			s, err := strconv.Unquote(decodeStr)
+			if err != nil {
+				log.Fatalf("unicode decode fail: %s", err.Error())
+			}
+			content = s
 		default:
 			log.Fatalf("暂不支持该解密模式, 请执行 help decode 查看帮助文档")
 		}
