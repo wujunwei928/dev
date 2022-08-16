@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/mitchellh/go-homedir"
@@ -49,17 +49,31 @@ func initConfig() {
 		// Find home directory.
 		home, err := homedir.Dir()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			log.Fatalf("get home dir fail: %s", err.Error())
 		}
 
 		// Search config in home directory with name ".bd.yaml"
 		viper.AddConfigPath(home)
 		viper.SetConfigName(".bd")
 		viper.SetConfigType("yaml")
+
 	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		os.Exit(1)
+		switch err.(type) {
+		case viper.ConfigFileNotFoundError:
+			if len(cfgFile) > 0 {
+				// 用户指定自定义配置路径时, 正常报文件未找到错误
+				log.Fatalf("viper read config fail: %s", err.Error())
+			}
+			// 用户未指定config路径时, 如果默认配置不存在, 自动创建
+			viper.Set("default_search_engine", "kaifa")
+			err := viper.SafeWriteConfig()
+			if err != nil {
+				log.Fatalf("default config not exist, auto create fail: %s", err.Error())
+			}
+		default:
+			log.Fatalf("viper read config fail: %s", err.Error())
+		}
 	}
 }
