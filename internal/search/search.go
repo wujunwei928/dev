@@ -14,7 +14,12 @@ const (
 	EngineZhiHu  = "zhihu"  // zhihu搜索
 	EngineWeiXin = "weixin" // 微信搜索
 	EngineGithub = "github" // github搜索
-	EngineKaifa  = "kaifa"  // baidu开发者搜索
+	EngineKaiFa  = "kaifa"  // baidu开发者搜索
+	EngineDouBan = "douban" // 豆瓣搜索
+	EngineMovie  = "movie"  // 豆瓣电影搜索
+	EngineBook   = "book"   // 豆瓣书籍搜索
+	Engine360    = "360"    // 360搜索
+	EngineSoGou  = "sogou"  // 搜狗搜索
 )
 
 // EngineParam 搜索引擎参数
@@ -56,10 +61,35 @@ var EngineParamMap = map[string]EngineParam{
 		Url:   "https://github.com",
 		Param: "/search?q=%s",
 	},
-	EngineKaifa: {
+	EngineKaiFa: {
 		Desc:  "百度开发者搜索",
 		Url:   "https://kaifa.baidu.com",
 		Param: "/searchPage?wd=%s",
+	},
+	EngineDouBan: {
+		Desc:  "豆瓣搜索",
+		Url:   "https://www.douban.com",
+		Param: "/search?q=%s",
+	},
+	EngineMovie: {
+		Desc:  "豆瓣电影搜索",
+		Url:   "https://www.douban.com",
+		Param: "/search?cat=1002&q=%s",
+	},
+	EngineBook: {
+		Desc:  "豆瓣书籍搜索",
+		Url:   "https://www.douban.com",
+		Param: "/search?cat=1001&q=%s",
+	},
+	Engine360: {
+		Desc:  "360搜索",
+		Url:   "https://www.so.com",
+		Param: "/s?q=%s",
+	},
+	EngineSoGou: {
+		Desc:  "搜狗搜索",
+		Url:   "https://www.sogou.com",
+		Param: "/web?query=%s",
 	},
 }
 
