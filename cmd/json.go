@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/spf13/cobra"
-	"github.com/wujunwei928/bd/internal/json2struct"
+	"github.com/wujunwei928/rd/internal/json2struct"
 )
 
 var jsonStr string

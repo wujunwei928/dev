@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wujunwei928/bd/internal/timer"
+	"github.com/wujunwei928/rd/internal/timer"
 
 	"github.com/spf13/cobra"
 )

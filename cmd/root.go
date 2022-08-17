@@ -16,7 +16,7 @@ var (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "bd",
+	Use:   "rd",
 	Short: "研发工具箱",
 	Long:  `研发工具箱`,
 	// Uncomment the following line if your bare application
@@ -37,7 +37,7 @@ func init() {
 	// 加载默认配置
 	cobra.OnInitialize(initConfig)
 	// 指定自定义配置文件
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.bd.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.rd.yaml)")
 }
 
 func initConfig() {
@@ -52,9 +52,9 @@ func initConfig() {
 			log.Fatalf("get home dir fail: %s", err.Error())
 		}
 
-		// Search config in home directory with name ".bd.yaml"
+		// Search config in home directory with name ".rd.yaml"
 		viper.AddConfigPath(home)
-		viper.SetConfigName(".bd")
+		viper.SetConfigName(".rd")
 		viper.SetConfigType("yaml")
 
 	}

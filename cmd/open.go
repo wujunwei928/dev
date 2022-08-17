@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
-	"github.com/wujunwei928/bd/internal/search"
+	"github.com/wujunwei928/rd/internal/search"
 )
 
 // openCmd represents the open command

@@ -5,7 +5,7 @@ import (
 	"os"
 	"text/template"
 
-	"github.com/wujunwei928/bd/internal/word"
+	"github.com/wujunwei928/rd/internal/word"
 )
 
 const structTpl = `type {{.TableName | ToCamelCase}} struct {

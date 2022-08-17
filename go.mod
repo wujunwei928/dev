@@ -1,4 +1,4 @@
-module github.com/wujunwei928/bd
+module github.com/wujunwei928/rd
 
 go 1.17
 

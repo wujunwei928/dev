@@ -4,7 +4,7 @@ import (
 	"log"
 	"strings"
 
-	"github.com/wujunwei928/bd/internal/word"
+	"github.com/wujunwei928/rd/internal/word"
 
 	"github.com/spf13/cobra"
 )
