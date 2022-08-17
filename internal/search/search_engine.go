@@ -2,12 +2,12 @@ package search
 
 import (
 	"bytes"
-	"fmt"
+	"errors"
 	"net/url"
 	"strings"
 	"time"
 
-	"github.com/pterm/pterm"
+	"github.com/tidwall/gjson"
 
 	"github.com/PuerkitoBio/goquery"
 	"github.com/go-resty/resty/v2"
@@ -20,38 +20,56 @@ type KeyVal struct {
 }
 
 func RequestDetail(searchEngine string, query string) ([][]KeyVal, error) {
+	var (
+		parseRes [][]KeyVal
+		err      error
+	)
+
 	engineParam := getEngineParam(searchEngine)
 
-	reqUrl := engineParam.Domain + fmt.Sprintf(engineParam.Param, url.QueryEscape(query))
+	reqUrl := engineParam.Domain + strings.ReplaceAll(engineParam.Param, "{search_query}", url.QueryEscape(query))
 	referUrl := engineParam.Domain
-	if searchEngine == EngineZhiHu {
+	if len(engineParam.AjaxUrl) > 0 {
+		// 是否是ajax请求
 		referUrl = reqUrl
-		reqUrl = "https://www.zhihu.com/api/v4/search_v3?gk_version=gz-gaokao&t=general&q=php&correction=1&offset=0&limit=20&filter_fields=&lc_idx=0&show_all_topics=0&search_source=Normal"
+		reqUrl = strings.ReplaceAll(engineParam.AjaxUrl, "{search_query}", url.QueryEscape(query))
 	}
+
 	client := resty.New()
 	client.SetTimeout(2000 * time.Millisecond)
 	res, err := client.R().
 		EnableTrace().
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36 Edg/104.0.1293.54").
 		SetHeader("Referer", referUrl).
-		SetHeader("Cookie", "").
 		Get(reqUrl)
 	if err != nil {
-		fmt.Println(pterm.Red(err.Error()))
 		return nil, err
 	}
-	fmt.Println(res.Request, string(res.Body()))
+	//fmt.Println(reqUrl, string(res.Body()), res.StatusCode())
 
-	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(res.Body()))
+	if engineParam.JsonRule != nil {
+		parseRes, err = engineParam.parseJson(res.Body())
+	} else if engineParam.HtmlRule != nil {
+		parseRes, err = engineParam.parseHtml(res.Body())
+	} else {
+		return nil, errors.New("json parse rule and html parse rule is both nil, please check")
+	}
+
+	return parseRes, nil
+}
+
+// 解析html结果
+func (e EngineParam) parseHtml(httpBody []byte) ([][]KeyVal, error) {
+	doc, err := goquery.NewDocumentFromReader(bytes.NewReader(httpBody))
 	if err != nil {
 		return nil, err
 	}
 
 	parseRes := make([][]KeyVal, 0, 10)
 	//fmt.Println(engineParam.HtmlRule.ListRule)
-	doc.Find(engineParam.HtmlRule.ListRule).Each(func(i int, s *goquery.Selection) {
-		item := make([]KeyVal, 0, len(engineParam.HtmlRule.ListItemRule))
-		for _, rule := range engineParam.HtmlRule.ListItemRule {
+	doc.Find(e.HtmlRule.ListRule).Each(func(i int, s *goquery.Selection) {
+		item := make([]KeyVal, 0, len(e.HtmlRule.ListItemRule))
+		for _, rule := range e.HtmlRule.ListItemRule {
 			var itemContent string
 			if len(rule.Attr) > 0 {
 				itemContent, _ = s.Find(rule.Rule).Attr(rule.Attr)
@@ -59,7 +77,7 @@ func RequestDetail(searchEngine string, query string) ([][]KeyVal, error) {
 					!strings.Contains(itemContent, "http://") &&
 					!strings.Contains(itemContent, "https://") {
 					// 有些网站(如: 搜狗)的跳转链接不带域名, 需要加上
-					itemContent = engineParam.Domain + itemContent
+					itemContent = e.Domain + itemContent
 				}
 			} else {
 				itemContent = s.Find(rule.Rule).Text()
@@ -72,11 +90,38 @@ func RequestDetail(searchEngine string, query string) ([][]KeyVal, error) {
 	return parseRes, nil
 }
 
+// 解析json结果
+func (e EngineParam) parseJson(httpBody []byte) ([][]KeyVal, error) {
+	listData := gjson.GetBytes(httpBody, e.JsonRule.ListRule)
+	if !listData.IsArray() {
+		return nil, errors.New("json list rule res is not array, please check")
+	}
+
+	parseRes := make([][]KeyVal, 0, 10)
+	listData.ForEach(func(key, value gjson.Result) bool {
+		item := make([]KeyVal, 0, len(e.JsonRule.ListItemRule))
+		for _, rule := range e.JsonRule.ListItemRule {
+			itemContent := value.Get(rule.Rule).String()
+			if rule.IsLink &&
+				!strings.Contains(itemContent, "http://") &&
+				!strings.Contains(itemContent, "https://") {
+				// 如果链接不带域名, 需要加上
+				itemContent = e.Domain + itemContent
+			}
+			item = append(item, KeyVal{Key: rule.Key, Val: itemContent})
+		}
+		parseRes = append(parseRes, item)
+		return true
+	})
+
+	return parseRes, nil
+}
+
 func getEngineParamBing() EngineParam {
 	return EngineParam{
 		Desc:   "必应搜索",
-		Domain: "https://cn.bing.com",
-		Param:  "/search?q=%s&ensearch=1",
+		Domain: "https://www.bing.com",
+		Param:  "/search?q={search_query}&ensearch=1",
 		HtmlRule: &ParseHtmlRule{
 			ListRule: ".b_algo",
 			ListItemRule: []ListItemHtmlRule{
@@ -102,9 +147,9 @@ func getEngineParamBaidu() EngineParam {
 	return EngineParam{
 		Desc:   "百度搜索",
 		Domain: "https://www.baidu.com",
-		Param:  "/s?wd=%s",
+		Param:  "/s?wd={search_query}",
 		HtmlRule: &ParseHtmlRule{
-			ListRule: ".c-container",
+			ListRule: "div.c-container.xpath-log.new-pmd",
 			ListItemRule: []ListItemHtmlRule{
 				{
 					Key:  "标题",
@@ -128,21 +173,22 @@ func getEngineParamGoogle() EngineParam {
 	return EngineParam{
 		Desc:   "谷歌搜索",
 		Domain: "https://www.google.com",
-		Param:  "/search?q=%s",
+		Param:  "/search?q={search_query}",
+		//TODO google请求需要配置代理, 暂时不支持cli模式
 		HtmlRule: &ParseHtmlRule{
-			ListRule: ".c-container",
+			ListRule: ".MjjYud",
 			ListItemRule: []ListItemHtmlRule{
 				{
 					Key:  "标题",
-					Rule: ".c-title a",
+					Rule: ".yuRUbf a",
 				},
 				{
 					Key:  "描述",
-					Rule: ".content-right_8Zs40",
+					Rule: "span.MUxGbd.wuQ4Ob.WZ8Tjf",
 				},
 				{
 					Key:  "链接",
-					Rule: ".c-title a",
+					Rule: ".yuRUbf a",
 					Attr: "href",
 				},
 			},
@@ -151,37 +197,18 @@ func getEngineParamGoogle() EngineParam {
 }
 
 func getEngineParamZhiHu() EngineParam {
-	return EngineParam{
-		Desc:    "知乎搜索",
-		Domain:  "https://www.zhihu.com",
-		Param:   "/search?q=%s&type=content",
-		AjaxUrl: "https://kaifa.baidu.com/rest/v1/search?wd=php%20substr&paramList=page_num%3D1%2Cpage_size%3D10&pageNum=1&pageSize=10",
-		HtmlRule: &ParseHtmlRule{
-			ListRule: ".SearchResult-Card",
-			ListItemRule: []ListItemHtmlRule{
-				{
-					Key:  "标题",
-					Rule: "h2.ContentItem-title > div > a",
-				},
-				{
-					Key:  "描述",
-					Rule: ".CopyrightRichText-richText",
-				},
-				{
-					Key:  "链接",
-					Rule: "h2.ContentItem-title > div > a",
-					Attr: "href",
-				},
-			},
-		},
-	}
+	// 觉得bing带 site:zhihu.com 的搜索结果, 比知乎站内搜索好, 这里用bing搜索
+	param := getEngineParamBing()
+	param.Desc = "知乎搜索"
+	param.Param = "/search?ensearch=0&q={search_query}" + url.QueryEscape(" site:zhihu.com")
+	return param
 }
 
 func getEngineParamWeiXin() EngineParam {
 	return EngineParam{
 		Desc:   "搜狗微信搜索",
 		Domain: "https://weixin.sogou.com",
-		Param:  "/weixin?query=%s&type=2",
+		Param:  "/weixin?query={search_query}&type=2",
 		HtmlRule: &ParseHtmlRule{
 			ListRule: ".txt-box",
 			ListItemRule: []ListItemHtmlRule{
@@ -207,7 +234,7 @@ func getEngineParamGithub() EngineParam {
 	return EngineParam{
 		Desc:   "Github搜索",
 		Domain: "https://github.com",
-		Param:  "/search?q=%s",
+		Param:  "/search?q={search_query}",
 		HtmlRule: &ParseHtmlRule{
 			ListRule: ".repo-list-item",
 			ListItemRule: []ListItemHtmlRule{
@@ -233,23 +260,23 @@ func getEngineParamKaiFa() EngineParam {
 	return EngineParam{
 		Desc:    "百度开发者搜索",
 		Domain:  "https://kaifa.baidu.com",
-		Param:   "/searchPage?wd=%s",
-		AjaxUrl: "",
-		HtmlRule: &ParseHtmlRule{
-			ListRule: ".ant-list-item",
-			ListItemRule: []ListItemHtmlRule{
+		Param:   "/searchPage?wd={search_query}",
+		AjaxUrl: "https://kaifa.baidu.com/rest/v1/search?wd={search_query}&paramList=page_num%3D1%2Cpage_size%3D10&pageNum=1&pageSize=10",
+		JsonRule: &ParseJsonRule{
+			ListRule: "data.documents.data",
+			ListItemRule: []ListItemJsonRule{
 				{
 					Key:  "标题",
-					Rule: ".title-root-e6482 a",
+					Rule: "techDocDigest.title",
 				},
 				{
 					Key:  "描述",
-					Rule: ".summary-root-b31c4 span",
+					Rule: "techDocDigest.summary",
 				},
 				{
-					Key:  "链接",
-					Rule: ".title-root-e6482 a",
-					Attr: "href",
+					Key:    "链接",
+					Rule:   "techDocDigest.url",
+					IsLink: true,
 				},
 			},
 		},
@@ -260,7 +287,7 @@ func getEngineParamDouBan() EngineParam {
 	return EngineParam{
 		Desc:   "豆瓣搜索",
 		Domain: "https://www.douban.com",
-		Param:  "/search?q=%s",
+		Param:  "/search?q={search_query}",
 		HtmlRule: &ParseHtmlRule{
 			ListRule: ".result",
 			ListItemRule: []ListItemHtmlRule{
@@ -298,7 +325,7 @@ func getEngineParamMovie() EngineParam {
 	param := EngineParam{
 		Desc:   "豆瓣电影搜索",
 		Domain: "https://www.douban.com",
-		Param:  "/search?cat=1002&q=%s",
+		Param:  "/search?cat=1002&q={search_query}",
 	}
 	douBanParam := getEngineParamDouBan()
 	param.HtmlRule = douBanParam.HtmlRule
@@ -310,7 +337,7 @@ func getEngineParamBook() EngineParam {
 	param := EngineParam{
 		Desc:   "豆瓣书籍搜索",
 		Domain: "https://www.douban.com",
-		Param:  "/search?cat=1001&q=%s",
+		Param:  "/search?cat=1001&q={search_query}",
 	}
 	douBanParam := getEngineParamDouBan()
 	param.HtmlRule = douBanParam.HtmlRule
@@ -322,7 +349,7 @@ func getEngineParam360() EngineParam {
 	return EngineParam{
 		Desc:   "360搜索",
 		Domain: "https://www.so.com",
-		Param:  "/s?q=%s",
+		Param:  "/s?q={search_query}",
 		HtmlRule: &ParseHtmlRule{
 			ListRule: ".res-list",
 			ListItemRule: []ListItemHtmlRule{
@@ -348,7 +375,7 @@ func getEngineParamSoGou() EngineParam {
 	return EngineParam{
 		Desc:   "搜狗搜索",
 		Domain: "https://www.sogou.com",
-		Param:  "/web?query=%s",
+		Param:  "/web?query={search_query}",
 		HtmlRule: &ParseHtmlRule{
 			ListRule: ".vrwrap",
 			ListItemRule: []ListItemHtmlRule{

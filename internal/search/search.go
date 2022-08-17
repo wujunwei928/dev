@@ -1,7 +1,6 @@
 package search
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -22,19 +21,6 @@ const (
 	EngineSoGou  = "sogou"  // 搜狗搜索
 )
 
-// ParseHtmlRule html解析规则
-type ParseHtmlRule struct {
-	ListRule     string             // 列表解析规则, 循环解析获取单挑属性值
-	ListItemRule []ListItemHtmlRule // 列表单条元素解析规则, 在ListRule的基础上向下解析
-}
-
-// ListItemHtmlRule html列表元素解析规则
-type ListItemHtmlRule struct {
-	Key  string // 解析后的key
-	Rule string // 解析规则
-	Attr string // 属性: 不设置时, 取text值; 设置时取对应的属性值
-}
-
 // EngineParam 搜索引擎参数
 type EngineParam struct {
 	Desc     string // 说明
@@ -43,13 +29,14 @@ type EngineParam struct {
 	AjaxUrl  string // ajax请求地址: 部分网站是使用ajax渲染, 终端模式下需请求此地址
 	Cookie   string // cookie
 	HtmlRule *ParseHtmlRule
+	JsonRule *ParseJsonRule
 }
 
 // EngineParamMap 搜索引擎映射
 var EngineParamMap = map[string]EngineParam{
 	EngineBing:   getEngineParamBing(),
 	EngineBaidu:  getEngineParamBaidu(),
-	EngineGoogle: getEngineParamZhiHu(),
+	EngineGoogle: getEngineParamGoogle(),
 	EngineZhiHu:  getEngineParamZhiHu(),
 	EngineWeiXin: getEngineParamWeiXin(),
 	EngineGithub: getEngineParamGithub(),
@@ -82,7 +69,7 @@ func FormatSearchUrl(searchEngine string, query string) string {
 		return engineParam.Domain
 	}
 
-	return engineParam.Domain + fmt.Sprintf(engineParam.Param, url.QueryEscape(query))
+	return engineParam.Domain + strings.ReplaceAll(engineParam.Param, "{search_query}", url.QueryEscape(query))
 }
 
 func FormatCommandDesc() string {

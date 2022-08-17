@@ -34,7 +34,10 @@ var searchCmd = &cobra.Command{
 		}
 		switch searchType {
 		case "cli":
-			searchRes, _ := search.RequestDetail(searchMode, searchStr)
+			searchRes, err := search.RequestDetail(searchMode, searchStr)
+			if err != nil {
+				log.Fatalf("request search engine fail: %s", err.Error())
+			}
 			keyStyle := pterm.NewStyle(pterm.FgLightBlue, pterm.Bold) // 标题cli样式
 			for i, s := range searchRes {
 				ptermTable := pterm.TableData{
