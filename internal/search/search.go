@@ -22,79 +22,47 @@ const (
 	EngineSoGou  = "sogou"  // 搜狗搜索
 )
 
+// ParseHtmlRule html解析规则
+type ParseHtmlRule struct {
+	ListRule     string             // 列表解析规则, 循环解析获取单挑属性值
+	ListItemRule []ListItemHtmlRule // 列表单条元素解析规则, 在ListRule的基础上向下解析
+}
+
+// ListItemHtmlRule html列表元素解析规则
+type ListItemHtmlRule struct {
+	Key  string // 解析后的key
+	Rule string // 解析规则
+	Attr string // 属性: 不设置时, 取text值; 设置时取对应的属性值
+}
+
 // EngineParam 搜索引擎参数
 type EngineParam struct {
-	Desc  string // 说明
-	Url   string // 网址
-	Param string // 检索参数
+	Desc     string // 说明
+	Domain   string // 浏览器检索域名
+	Param    string // 浏览器检索参数
+	AjaxUrl  string // ajax请求地址: 部分网站是使用ajax渲染, 终端模式下需请求此地址
+	Cookie   string // cookie
+	HtmlRule *ParseHtmlRule
 }
 
 // EngineParamMap 搜索引擎映射
 var EngineParamMap = map[string]EngineParam{
-	EngineBing: {
-		Desc:  "必应搜索",
-		Url:   "https://cn.bing.com",
-		Param: "/search?q=%s&ensearch=1",
-	},
-	EngineBaidu: {
-		Desc:  "百度搜索",
-		Url:   "https://www.baidu.com",
-		Param: "/s?wd=%s",
-	},
-	EngineGoogle: {
-		Desc:  "谷歌搜索",
-		Url:   "https://www.google.com",
-		Param: "/search?q=%s",
-	},
-	EngineZhiHu: {
-		Desc:  "知乎搜索",
-		Url:   "https://www.zhihu.com",
-		Param: "/search?q=%s&type=content",
-	},
-	EngineWeiXin: {
-		Desc:  "搜狗微信搜索",
-		Url:   "https://weixin.sogou.com",
-		Param: "/weixin?query=%s&type=2",
-	},
-	EngineGithub: {
-		Desc:  "Github搜索",
-		Url:   "https://github.com",
-		Param: "/search?q=%s",
-	},
-	EngineKaiFa: {
-		Desc:  "百度开发者搜索",
-		Url:   "https://kaifa.baidu.com",
-		Param: "/searchPage?wd=%s",
-	},
-	EngineDouBan: {
-		Desc:  "豆瓣搜索",
-		Url:   "https://www.douban.com",
-		Param: "/search?q=%s",
-	},
-	EngineMovie: {
-		Desc:  "豆瓣电影搜索",
-		Url:   "https://www.douban.com",
-		Param: "/search?cat=1002&q=%s",
-	},
-	EngineBook: {
-		Desc:  "豆瓣书籍搜索",
-		Url:   "https://www.douban.com",
-		Param: "/search?cat=1001&q=%s",
-	},
-	Engine360: {
-		Desc:  "360搜索",
-		Url:   "https://www.so.com",
-		Param: "/s?q=%s",
-	},
-	EngineSoGou: {
-		Desc:  "搜狗搜索",
-		Url:   "https://www.sogou.com",
-		Param: "/web?query=%s",
-	},
+	EngineBing:   getEngineParamBing(),
+	EngineBaidu:  getEngineParamBaidu(),
+	EngineGoogle: getEngineParamZhiHu(),
+	EngineZhiHu:  getEngineParamZhiHu(),
+	EngineWeiXin: getEngineParamWeiXin(),
+	EngineGithub: getEngineParamGithub(),
+	EngineKaiFa:  getEngineParamKaiFa(),
+	EngineDouBan: getEngineParamDouBan(),
+	EngineMovie:  getEngineParamMovie(),
+	EngineBook:   getEngineParamBook(),
+	Engine360:    getEngineParam360(),
+	EngineSoGou:  getEngineParamSoGou(),
 }
 
-// FormatSearchUrl 格式化检索网址
-func FormatSearchUrl(searchEngine string, query string) string {
+// 获取搜索引擎参数
+func getEngineParam(searchEngine string) EngineParam {
 	engineParam, ok := EngineParamMap[searchEngine]
 
 	// 如果没有对应的搜索引擎, 使用必应
@@ -102,12 +70,19 @@ func FormatSearchUrl(searchEngine string, query string) string {
 		engineParam = EngineParamMap[EngineBing]
 	}
 
+	return engineParam
+}
+
+// FormatSearchUrl 格式化检索网址
+func FormatSearchUrl(searchEngine string, query string) string {
+	engineParam := getEngineParam(searchEngine)
+
 	// 如果没有设置检索query, 只打开搜索引擎
 	if len(query) <= 0 {
-		return engineParam.Url
+		return engineParam.Domain
 	}
 
-	return engineParam.Url + fmt.Sprintf(engineParam.Param, url.QueryEscape(query))
+	return engineParam.Domain + fmt.Sprintf(engineParam.Param, url.QueryEscape(query))
 }
 
 func FormatCommandDesc() string {
