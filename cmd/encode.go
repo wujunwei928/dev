@@ -51,7 +51,7 @@ var encodeCmd = &cobra.Command{
 		case EncodeTypeBase64:
 			content = base64.StdEncoding.EncodeToString([]byte(encodeStr))
 		case EncodeTypeUrl:
-			// 注意: 如果字符串中含有&, 主要用双引号 "a=1&b=2", 否则&后的字符会丢失
+			// 注意: 如果字符串中含有&, 需要用双引号 "a=1&b=2", 否则&后的字符会丢失
 			content = url.QueryEscape(encodeStr)
 			//fmt.Println(encodeStr, content)
 		case EncodeTypeUnicode:

@@ -13,10 +13,18 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/spf13/viper"
+
 	"github.com/spf13/cobra"
 )
 
-var httpPort int
+const (
+	// DefaultHttpPort flag默认端口
+	DefaultHttpPort = 8899
+
+	// HttpConfigPort http端口配置项
+	HttpConfigPort = "http.port"
+)
 
 // httpCmd represents the http command
 var httpCmd = &cobra.Command{
@@ -24,7 +32,7 @@ var httpCmd = &cobra.Command{
 	Short: "http服务",
 	Long:  `启动http服务上传下载文件, 类似python的http.server`,
 	Run: func(cmd *cobra.Command, args []string) {
-		strHttpPort := strconv.Itoa(httpPort)
+		strHttpPort := strconv.Itoa(viper.GetInt(HttpConfigPort))
 
 		// 静态文件, 文件下载
 		fs := http.FileServer(http.Dir("./"))
@@ -141,7 +149,13 @@ var httpCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(httpCmd)
 
-	httpCmd.Flags().IntVarP(&httpPort, "port", "p", 8899, "http端口")
+	// viper配置 和 flag 绑定, 使用 viper.Get 获取对应配置项时的顺序, 因为后续需要用viper获取flag, 这里不需要用IntVarP, 用IntP即可
+	// 参考: https://github.com/spf13/cobra/issues/23
+	// If no config file is specified, use default flag value.
+	// If config file is specified, and the user did not set the flag, use the value in the config file
+	// If config file is specified, but the user did set the flag, use the value specified by the user, even if it's just the default flag value.
+	httpCmd.Flags().IntP("port", "p", 8899, "http端口")
+	viper.BindPFlag(HttpConfigPort, httpCmd.Flags().Lookup("port"))
 }
 
 func GetLocalIp() (string, error) {

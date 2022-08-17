@@ -12,10 +12,27 @@ import (
 	"github.com/wujunwei928/rd/internal/search"
 )
 
+// 检索类型
+const (
+	SearchTypeBrowser = "browser" // 浏览器
+	SearchTypeCli     = "cli"     // 终端显示
+)
+
+// 搜索默认项
+const (
+	DefaultSearchEngine = search.EngineBing // 默认搜索引擎
+	DefaultSearchType   = SearchTypeBrowser // 默认检索类型
+	DefaultCliIsDesc    = true              // 默认cli是否倒序显示
+)
+
+// 搜索配置项
+const (
+	SearchConfigEngine    = "search.default_engine"
+	SearchConfigType      = "search.default_type"
+	SearchConfigCliIsDesc = "search.cli_is_desc"
+)
+
 var searchStr string
-var searchMode string
-var searchType string
-var searchCliDesc bool
 
 var searchTypeUSage = strings.Join([]string{
 	"检索方式: ",
@@ -30,11 +47,16 @@ var searchCmd = &cobra.Command{
 	Long:  "指定搜索引擎, 检索相关query",
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
+
+		searchMode := viper.GetString(SearchConfigEngine)
+		searchType := viper.GetString(SearchConfigType)
+		searchCliDesc := viper.GetBool(SearchConfigCliIsDesc)
+		fmt.Println(searchMode, searchType, searchCliDesc)
 		if len(searchMode) <= 0 {
 			searchMode = viper.GetString("default_search_engine")
 		}
 		switch searchType {
-		case "cli":
+		case SearchTypeCli:
 			// 终端显示搜索结果
 			searchRes, err := search.RequestDetail(searchMode, searchStr)
 			if err != nil {
@@ -83,7 +105,12 @@ func init() {
 	rootCmd.AddCommand(searchCmd)
 
 	searchCmd.Flags().StringVarP(&searchStr, "str", "s", "", "请输入搜索query")
-	searchCmd.Flags().StringVarP(&searchMode, "mode", "m", "", search.FormatCommandDesc())
-	searchCmd.Flags().StringVarP(&searchType, "type", "t", "", searchTypeUSage)
-	searchCmd.Flags().BoolVarP(&searchCliDesc, "desc", "", true, "是否倒序展示: 默认倒序, 方便查看(只终端展示生效)")
+	searchCmd.Flags().StringP("mode", "m", DefaultSearchEngine, search.FormatCommandDesc())
+	searchCmd.Flags().StringP("type", "t", DefaultSearchType, searchTypeUSage)
+	searchCmd.Flags().BoolP("desc", "", DefaultCliIsDesc, "终端是否倒序展示: 默认倒序, 方便查看")
+
+	// flag 和 viper 绑定
+	viper.BindPFlag(SearchConfigEngine, searchCmd.Flags().Lookup("mode"))
+	viper.BindPFlag(SearchConfigType, searchCmd.Flags().Lookup("type"))
+	viper.BindPFlag(SearchConfigCliIsDesc, searchCmd.Flags().Lookup("desc"))
 }

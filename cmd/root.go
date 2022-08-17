@@ -66,8 +66,8 @@ func initConfig() {
 				// 用户指定自定义配置路径时, 正常报文件未找到错误
 				log.Fatalf("viper read config fail: %s", err.Error())
 			}
-			// 用户未指定config路径时, 如果默认配置不存在, 自动创建
-			viper.Set("default_search_engine", "kaifa")
+			// 用户未指定config路径时, 如果默认配置文件不存在, 自动创建
+			ViperInitSet()
 			err := viper.SafeWriteConfig()
 			if err != nil {
 				log.Fatalf("default config not exist, auto create fail: %s", err.Error())
@@ -76,4 +76,23 @@ func initConfig() {
 			log.Fatalf("viper read config fail: %s", err.Error())
 		}
 	}
+}
+
+// ViperInitSet viper 初始化设置
+func ViperInitSet() {
+	// http
+	viper.Set(HttpConfigPort, DefaultHttpPort)
+
+	// search
+	viper.Set(SearchConfigEngine, DefaultSearchEngine)
+	viper.Set(SearchConfigType, DefaultSearchType)
+	viper.Set(SearchConfigCliIsDesc, DefaultCliIsDesc)
+
+	// sql
+	viper.Set(SqlConfigType, DefaultSqlType)
+	viper.Set(SqlConfigHost, DefaultSqlHost)
+	viper.Set(SqlConfigUserName, "")
+	viper.Set(SqlConfigPassword, "")
+	viper.Set(SqlConfigDb, "")
+	viper.Set(SqlConfigCharset, DefaultSqlCharset)
 }
