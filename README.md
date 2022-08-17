@@ -1,6 +1,7 @@
 # 简介
 `rd` 是一个使用golang开发的研发工具, 集成了一系列常用的研发功能, 助力程序员提升研发效率.
 集成了以下功能:
+
 |功能|说明|
 |---|---|
 | search | 搜索: 支持打开默认浏览器搜索 和 终端显示搜索结果 |
@@ -43,6 +44,34 @@ Flags:
 Use "rd [command] --help" for more information about a command.
 ```
 
+# 配置
+工具支持自定义配置, 检索相关命令
+默认配置路径: `$HOME/.rd.yaml`
+
+支持配置:
+```yaml
+http:
+# http配置
+    port: 8811  # http端口
+search:
+# 检索配置
+    cli_is_desc: true       # 终端显示结果是否倒序
+    default_engine: kaifa   # 默认搜索引擎
+    default_type: cli       # 默认检索模式: browser:打开默认浏览器检索; cli: 终端显示搜索结果
+sql:
+# sql配置
+    type: mysql             # 数据库类型
+    host: 127.0.0.1:3306    # 数据库host
+    username: root          # 数据库用户名
+    password: 123456        # 数据库密码
+    db: novel               # 数据库名称
+    charset: utf8mb4        # 字符类型
+```
+
+flag默认值, flag配置文件配置项, flag用户手动设置项 优先级说明: 
+1. 如果配置文件没有设置对应配置项, 使用flag的默认值
+2. 如果配置文件有设置配置项, 用户没有设置flag值, 使用配置文件配置项
+3. 如果配置文件有设置配置项, 但是用户设置了flag值, 使用用户设置的值, 即使设置的值和默认值相等, 
 
 # 命令列表
 ## search: 搜索服务
@@ -80,12 +109,198 @@ Global Flags:
 
 ```
 
+
+
 **使用方式**
 ```bash
+# 长标签模式
+rd search --type=搜索类型[打开默认浏览器/终端显示] --mode=搜索引擎[bing/baidu/google/...] --str="搜索query" --desc=true
+
+# 短标签模式
 rd search -t 搜索类型[打开默认浏览器/终端显示] -m 搜索引擎[bing/baidu/google/...] -s "搜索query" --desc=true
 ```
 
 ### 浏览器搜索
+**指定搜索引擎, 检索query**
+```bash
+rd search -m bing -s "golang slice"
+```
+
+**不指定query, 浏览器打开搜索引擎首页**
+```bash
+rd search -m bing
+```
+
+### 命令行
+在终端里直接显示检索结果, 适用于习惯命令行或服务器没有浏览器的模式下使用, 因为结果显示信息较多, 为了方便查看, `搜索结果默认倒序显示`
+> 1. 命令行模式必须指定query
+> 2. windows下尽量使用windows terminal, 支持鼠标点击链接跳转
+
+**默认倒序显示**
+```bash
+rd search -t cli -m bing -s "golang slice" --desc=false
+```
+
+**强制正序显示**
+```bash
+rd search -t cli -m bing -s "golang slice" --desc=false
+```
+
+### 设置默认配置, 减少命令行书写
+```yaml
+search:
+  default-type: cli
+  default-engine: bing
+```
+
+## open: 打开网址或文件夹
+**打开文件夹**
+```bash
+rd open -s .
+```
+
+**使用默认浏览器打开网址**
+```bash
+rd open -s https://www.baidu.com/
+```
+> ps: 网址必须带协议
+
+## http: http服务
+快速启动http服务, 方便文件传输, 支持文件上传下载
+默认端口: 8899, 支持命令行或配置自定义
+
+**启动http服务**
+```bash
+rd http
+```
+
+**指定端口启动**
+```bash
+rd http -p 8080
+```
+
+**主界面**
+
+**下载界面**
+
+## encode: 字符串加密
+字符串加密: 支持 md5, sha1, base64, url加密, unicode...
+
+**使用方式**
+```bash
+# md5加密
+rd encode -m md5 -s golang
+
+# sha1加密
+rd encode -m sha1 -s golang
+
+# base64加密
+rd encode -m base64 -s golang
+
+# url加密
+rd encode -m url -s "name=张三&age=18"
+
+# sha1加密
+rd encode -m unicode -s 中国人
+```
+
+## decode: 字符串解密
+字符串解密, 支持: base64, url, unicode...
+
+**打开文件夹**
+```bash
+# base64
+rd decode -m base64 -s 5Lit5Zu95Lq6
+
+# url
+rd decode -m url -s name%3D%E5%BC%A0%E4%B8%89%26age%3D18
+
+# unicode
+rd decode -m unicode -s "\u4e2d\u56fd\u4eba"
+```
+
+## time: 时间转换
+**解析时间戳**
+```bash
+# 解析当前时间戳
+rd time parse
+
+# 解析指定时间戳
+rd time parse -t 123
+```
+
+**计算时间**
+```bash
+# 获取某个时间的时间戳
+rd time calc -c "2022-08-17 19:40:11" -d 0
+
+# 指定时间增加10分钟 (支持 "ns", "us" (or "µ s"), "ms", "s", "m", "h")
+rd time calc -c "2022-08-17 19:40:11" -d +10m
+
+# 指定时间减少10分钟
+rd time calc -c "2022-08-17 19:40:11" -d -10m
+```
+
+## json: json工具
+**json转golang结构体**
+```bash
+rd json struct -s '{"name":"zhangsan","list":["a", "b", "c"]}'
+```
+
+## sql: sql工具
+**转golang结构体**
+**查看帮助**
+```bash
+rd sql struct -h
+```
+```bash
+sql转换
+
+Usage:
+  rd sql struct [flags]
+
+Flags:
+      --charset string    请输入数据库的编码 (default "utf8mb4")
+      --db string         请输入数据库名称
+  -h, --help              help for struct
+      --host string       请输入数据库的HOST (default "127.0.0.1:3306")
+      --password string   请输入数据库的密码
+      --table string      请输入表名称
+      --type string       请输入数据库实例类型 (default "mysql")
+      --username string   请输入数据库的账号
+
+Global Flags:
+      --config string   config file (default is $HOME/.rd.yaml)
+```
+
+**指定数据表生成结构体**
+```bash
+# rd sql struct --type=数据库类型 --host=数据库host --username=用户名 --password=密码 --db=数据库名 --table=表名
+rd sql struct --type=mysql --host="127.0.0.1:3306" --username=root --password=123456 --db=blog --table=user
+```
+
+## word: 单词工具
+**查看帮助**
+```bash
+rd word -h
+```
+
+**使用方式**
+```bash
+# 转大写
+rd word -m 1 -s abc
+
+# 转小写
+rd word -m 2 -s ABC
+
+# 下划线转驼峰
+rd word -m 3 -s abc_def
+
+# 下划线转驼峰(首个单词首字母小写)
+rd word -m 4 -s abc_def
+
+# 驼峰转下划线
+rd word -m 5 -s AbcDefGhk
 ```
 
 
@@ -99,4 +314,7 @@ rd search -t 搜索类型[打开默认浏览器/终端显示] -m 搜索引擎[bi
 | [github.com/PuerkitoBio/goquery](https://github.com/PuerkitoBio/goquery)  | jQuery语法解析html页面 |
 | [github.com/mitchellh/go-homedir](https://github.com/mitchellh/go-homedir)  | 用于检测用户的主目录 |
 
+
+# 常见问题
+1. 如果相关参数值值有空格或特殊符号(如:&), 需要用双引号 "s=golang slice&b=2"
 
