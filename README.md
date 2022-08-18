@@ -181,7 +181,13 @@ rd http -p 8080
 
 **主界面**
 
+![image](https://user-images.githubusercontent.com/3396697/185265872-2bf24b42-1281-442e-8cf6-5eb90e4f93ac.png)
+
+
 **下载界面**
+
+![image](https://user-images.githubusercontent.com/3396697/185266236-d714b180-47ae-40ba-a62e-6bd6bbaba3b9.png)
+
 
 ## encode: 字符串加密
 字符串加密: 支持 md5, sha1, base64, url加密, unicode...
