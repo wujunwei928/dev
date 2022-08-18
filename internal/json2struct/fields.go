@@ -3,7 +3,7 @@ package json2struct
 import (
 	"fmt"
 
-	"github.com/wujunwei928/rd/internal/word"
+	"github.com/wujunwei928/dev/internal/word"
 )
 
 type FieldSegment struct {

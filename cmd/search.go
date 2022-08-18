@@ -9,7 +9,7 @@ import (
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/wujunwei928/rd/internal/search"
+	"github.com/wujunwei928/dev/internal/search"
 )
 
 // 检索类型

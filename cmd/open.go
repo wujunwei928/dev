@@ -5,7 +5,7 @@ import (
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/wujunwei928/rd/internal/search"
+	"github.com/wujunwei928/dev/internal/search"
 )
 
 // openCmd represents the open command

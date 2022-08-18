@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"
-	"github.com/wujunwei928/rd/internal/sql2struct"
+	"github.com/wujunwei928/dev/internal/sql2struct"
 )
 
 // sql默认项

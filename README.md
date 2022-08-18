@@ -20,7 +20,7 @@
    * [常见问题](#常见问题)
 
 # 简介
-`rd` 是一个使用golang开发的研发工具, 集成了一系列常用的研发功能, 助力程序员提升研发效率.
+`dev` 是一个使用golang开发的研发工具, 集成了一系列常用的研发功能, 助力程序员提升研发效率.
 使用go开发是可以方便的编译为二进制, 没有脚本语言的包依赖问题.
 
 集成了以下功能:
@@ -39,13 +39,13 @@
 
 **查看帮助**
 ```bash
-rd -h
+dev -h
 ```
 ```bash
 研发工具箱
 
 Usage:
-  rd [command]
+  dev [command]
 
 Available Commands:
   completion  Generate the autocompletion script for the specified shell
@@ -61,26 +61,26 @@ Available Commands:
   word        单词格式转换
 
 Flags:
-      --config string   config file (default is $HOME/.rd.yaml)
-  -h, --help            help for rd
+      --config string   config file (default is $HOME/.dev.yaml)
+  -h, --help            help for dev
 
-Use "rd [command] --help" for more information about a command.
+Use "dev [command] --help" for more information about a command.
 ```
 
 # 安装
 ## go install 安装
 如果你本机安装有go sdk, 可以直接用go install 安装最新版
 ```bash
-go install github.com/wujunwei928/rd@latest
+go install github.com/wujunwei928/dev@latest
 ```
 
 ## 下载可执行文件
 下载指定系统的可执行文件  
-下载地址: https://github.com/wujunwei928/rd/releases
+下载地址: https://github.com/wujunwei928/dev/releases
 
 # 配置
 工具支持自定义配置, 检索相关命令
-默认配置路径: `$HOME/.rd.yaml`
+默认配置路径: `$HOME/.dev.yaml`
 
 支持配置:
 ```yaml
@@ -111,11 +111,11 @@ flag默认值, flag配置文件配置项, flag用户手动设置项 优先级说
 ## search: 搜索服务
 **查看帮助**
 ```bash
-$ rd search -h
+$ dev search -h
 指定搜索引擎, 检索相关query
 
 Usage:
-  rd search [flags]
+  dev search [flags]
 
 Flags:
       --desc          是否倒序展示: 默认倒序, 方便查看(只终端展示生效) (default true)
@@ -139,7 +139,7 @@ Flags:
                       cli: 终端显示搜索内容
 
 Global Flags:
-      --config string   config file (default is $HOME/.rd.yaml)
+      --config string   config file (default is $HOME/.dev.yaml)
 
 ```
 
@@ -148,21 +148,21 @@ Global Flags:
 **使用方式**
 ```bash
 # 长标签模式
-rd search --type=搜索类型[打开默认浏览器/终端显示] --mode=搜索引擎[bing/baidu/google/...] --str="搜索query" --desc=true
+dev search --type=搜索类型[打开默认浏览器/终端显示] --mode=搜索引擎[bing/baidu/google/...] --str="搜索query" --desc=true
 
 # 短标签模式
-rd search -t 搜索类型[打开默认浏览器/终端显示] -m 搜索引擎[bing/baidu/google/...] -s "搜索query" --desc=true
+dev search -t 搜索类型[打开默认浏览器/终端显示] -m 搜索引擎[bing/baidu/google/...] -s "搜索query" --desc=true
 ```
 
 ### 浏览器搜索
 **指定搜索引擎, 检索query**
 ```bash
-rd search -m bing -s "golang slice"
+dev search -m bing -s "golang slice"
 ```
 
 **不指定query, 浏览器打开搜索引擎首页**
 ```bash
-rd search -m bing
+dev search -m bing
 ```
 
 ### 命令行
@@ -172,12 +172,12 @@ rd search -m bing
 
 **默认倒序显示**
 ```bash
-rd search -t cli -m bing -s "golang slice" --desc=false
+dev search -t cli -m bing -s "golang slice" --desc=false
 ```
 
 **强制正序显示**
 ```bash
-rd search -t cli -m bing -s "golang slice" --desc=false
+dev search -t cli -m bing -s "golang slice" --desc=false
 ```
 
 ### 设置默认配置, 减少命令行书写
@@ -190,12 +190,12 @@ search:
 ## open: 打开网址或文件夹
 **打开文件夹**
 ```bash
-rd open -s .
+dev open -s .
 ```
 
 **使用默认浏览器打开网址**
 ```bash
-rd open -s https://www.baidu.com/
+dev open -s https://www.baidu.com/
 ```
 > ps: 网址必须带协议
 
@@ -205,12 +205,12 @@ rd open -s https://www.baidu.com/
 
 **启动http服务**
 ```bash
-rd http
+dev http
 ```
 
 **指定端口启动**
 ```bash
-rd http -p 8080
+dev http -p 8080
 ```
 
 **主界面**
@@ -229,19 +229,19 @@ rd http -p 8080
 **使用方式**
 ```bash
 # md5加密
-rd encode -m md5 -s golang
+dev encode -m md5 -s golang
 
 # sha1加密
-rd encode -m sha1 -s golang
+dev encode -m sha1 -s golang
 
 # base64加密
-rd encode -m base64 -s golang
+dev encode -m base64 -s golang
 
 # url加密
-rd encode -m url -s "name=张三&age=18"
+dev encode -m url -s "name=张三&age=18"
 
 # sha1加密
-rd encode -m unicode -s 中国人
+dev encode -m unicode -s 中国人
 ```
 
 ## decode: 字符串解密
@@ -250,54 +250,54 @@ rd encode -m unicode -s 中国人
 **打开文件夹**
 ```bash
 # base64
-rd decode -m base64 -s 5Lit5Zu95Lq6
+dev decode -m base64 -s 5Lit5Zu95Lq6
 
 # url
-rd decode -m url -s name%3D%E5%BC%A0%E4%B8%89%26age%3D18
+dev decode -m url -s name%3D%E5%BC%A0%E4%B8%89%26age%3D18
 
 # unicode
-rd decode -m unicode -s "\u4e2d\u56fd\u4eba"
+dev decode -m unicode -s "\u4e2d\u56fd\u4eba"
 ```
 
 ## time: 时间转换
 **解析时间戳**
 ```bash
 # 解析当前时间戳
-rd time parse
+dev time parse
 
 # 解析指定时间戳
-rd time parse -t 123
+dev time parse -t 123
 ```
 
 **计算时间**
 ```bash
 # 获取某个时间的时间戳
-rd time calc -c "2022-08-17 19:40:11" -d 0
+dev time calc -c "2022-08-17 19:40:11" -d 0
 
 # 指定时间增加10分钟 (支持 "ns", "us" (or "µ s"), "ms", "s", "m", "h")
-rd time calc -c "2022-08-17 19:40:11" -d +10m
+dev time calc -c "2022-08-17 19:40:11" -d +10m
 
 # 指定时间减少10分钟
-rd time calc -c "2022-08-17 19:40:11" -d -10m
+dev time calc -c "2022-08-17 19:40:11" -d -10m
 ```
 
 ## json: json工具
 **json转golang结构体**
 ```bash
-rd json struct -s '{"name":"zhangsan","list":["a", "b", "c"]}'
+dev json struct -s '{"name":"zhangsan","list":["a", "b", "c"]}'
 ```
 
 ## sql: sql工具
 **转golang结构体**
 **查看帮助**
 ```bash
-rd sql struct -h
+dev sql struct -h
 ```
 ```bash
 sql转换
 
 Usage:
-  rd sql struct [flags]
+  dev sql struct [flags]
 
 Flags:
       --charset string    请输入数据库的编码 (default "utf8mb4")
@@ -310,37 +310,37 @@ Flags:
       --username string   请输入数据库的账号
 
 Global Flags:
-      --config string   config file (default is $HOME/.rd.yaml)
+      --config string   config file (default is $HOME/.dev.yaml)
 ```
 
 **指定数据表生成结构体**
 ```bash
-# rd sql struct --type=数据库类型 --host=数据库host --username=用户名 --password=密码 --db=数据库名 --table=表名
-rd sql struct --type=mysql --host="127.0.0.1:3306" --username=root --password=123456 --db=blog --table=user
+# dev sql struct --type=数据库类型 --host=数据库host --username=用户名 --password=密码 --db=数据库名 --table=表名
+dev sql struct --type=mysql --host="127.0.0.1:3306" --username=root --password=123456 --db=blog --table=user
 ```
 
 ## word: 单词工具
 **查看帮助**
 ```bash
-rd word -h
+dev word -h
 ```
 
 **使用方式**
 ```bash
 # 转大写
-rd word -m 1 -s abc
+dev word -m 1 -s abc
 
 # 转小写
-rd word -m 2 -s ABC
+dev word -m 2 -s ABC
 
 # 下划线转驼峰
-rd word -m 3 -s abc_def
+dev word -m 3 -s abc_def
 
 # 下划线转驼峰(首个单词首字母小写)
-rd word -m 4 -s abc_def
+dev word -m 4 -s abc_def
 
 # 驼峰转下划线
-rd word -m 5 -s AbcDefGhk
+dev word -m 5 -s AbcDefGhk
 ```
 
 
