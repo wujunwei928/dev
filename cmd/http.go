@@ -35,7 +35,11 @@ var httpCmd = &cobra.Command{
 		strHttpPort := strconv.Itoa(viper.GetInt(HttpConfigPort))
 
 		// 静态文件, 文件下载
-		fs := http.FileServer(http.Dir("./"))
+		staticDir := "./"
+		if pwd, err := os.Getwd(); err == nil {
+			staticDir = pwd
+		}
+		fs := http.FileServer(http.Dir(staticDir))
 		http.Handle("/static/", http.StripPrefix("/static/", fs))
 
 		// 文件上传页面
