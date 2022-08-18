@@ -1,5 +1,28 @@
+- [ 简介](#head1)
+- [ 安装](#head2)
+	- [go install 安装](#head3)
+	- [ 下载可执行文件](#head4)
+- [ 配置](#head5)
+- [ 命令列表](#head6)
+	- [search: 搜索服务](#head7)
+		- [ 浏览器搜索](#head8)
+		- [ 命令行](#head9)
+		- [设置默认配置, 减少命令行书写](#head10)
+	- [open: 打开网址或文件夹](#head11)
+	- [http: http服务](#head12)
+	- [encode: 字符串加密](#head13)
+	- [decode: 字符串解密](#head14)
+	- [time: 时间转换](#head15)
+	- [json: json工具](#head16)
+	- [sql: sql工具](#head17)
+	- [word: 单词工具](#head18)
+- [ 依赖模块](#head19)
+- [ 常见问题](#head20)
+
 # 简介
 `rd` 是一个使用golang开发的研发工具, 集成了一系列常用的研发功能, 助力程序员提升研发效率.
+使用go开发是可以方便的编译为二进制, 没有脚本语言的包依赖问题.
+
 集成了以下功能:
 
 |功能|说明|
@@ -43,6 +66,17 @@ Flags:
 
 Use "rd [command] --help" for more information about a command.
 ```
+
+# 安装
+## go install 安装
+如果你本机安装有go sdk, 可以直接用go install 安装最新版
+```bash
+go install github.com/wujunwei928/rd@latest
+```
+
+## 下载可执行文件
+下载指定系统的可执行文件  
+下载地址: https://github.com/wujunwei928/rd/releases
 
 # 配置
 工具支持自定义配置, 检索相关命令
