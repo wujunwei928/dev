@@ -21,7 +21,7 @@ const (
 // 搜索默认项
 const (
 	DefaultSearchEngine = search.EngineBing // 默认搜索引擎
-	DefaultSearchType   = SearchTypeBrowser // 默认检索类型
+	DefaultSearchType   = SearchTypeCli     // 默认检索类型
 	DefaultCliIsDesc    = true              // 默认cli是否倒序显示
 )
 
