@@ -31,7 +31,7 @@ jobs:
         run: |
           mkdir temp
           GOARCH=amd64
-          for goOs in (linux windows darwin);\
+          for goOs in linux windows darwin;\
           do echo "Building $goOs amd64 binary...";\
           GOOS=$goOs;\
           outputDir='output'
@@ -62,4 +62,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          asset_paths: '["temp/dev_*"]'
+          asset_paths: '["temp/dev-*"]'
