@@ -42,7 +42,7 @@ jobs:
           fi;\
           go build -o $outputFile;\
           cd $outputDir && tar -zcvf dev-${{ steps.get_version.outputs.VERSION }}-$GOOS-$GOARCH.tar.gz && mv dev-$tag_name-$GOOS-$GOARCH.tar.gz ../temp;\
-          cd ../ && rm -rf $outputDir\
+          cd ../ && rm -rf $outputDir;\
           done
 
       - name: Create Github Release
