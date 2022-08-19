@@ -1,0 +1,67 @@
+name: dev CLI Build Release
+
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - '0.*' # Push events to matching 0.*, i.e. 0.1.0, 0.1.1
+
+env:
+  TZ: Asia/Shanghai
+
+
+jobs:
+  build:
+    name: Build And Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Checkout Github Code
+        uses: actions/checkout@v2
+
+      - name: Set Up Golang Environment
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - name: Build CLI Binary
+        run: |
+          mkdir temp
+          GOARCH=amd64
+          for goOs in (linux windows darwin);\
+          do echo "Building $goOs amd64 binary...";\
+          GOOS=$goOs;\
+          outputDir='output'
+          mkdir $outputDir
+          outputFile="$outputDir/dev"
+          if [[ ${OS} =~ 'windows' ]];\
+          then outputFile="$outputDir/dev.exe";\
+          fi;\
+          go build -o $outputFile;\
+          cd $outputDir && tar -zcvf dev-$tag_name-$GOOS-$GOARCH.tar.gz && mv dev-$tag_name-$GOOS-$GOARCH.tar.gz ../temp;\
+          cd ../ && rm -rf $outputDir\
+          done
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Create Github Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name:     ${{ github.ref }}
+          release_name: dev Release ${{ github.ref }}
+          draft:        false
+          prerelease:   false
+
+      - name: Upload Release Asset
+        id:   upload-release-asset
+        uses: alexellis/upload-assets@0.2.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          asset_paths: '["temp/dev_*"]'
