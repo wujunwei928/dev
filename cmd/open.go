@@ -1,7 +1,9 @@
 package cmd
 
 import (
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
@@ -14,14 +16,15 @@ var openCmd = &cobra.Command{
 	Short: "打开网址或文件路径",
 	Long:  `打开网址或文件路径, 网址需要协议如:https://`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if searchStr == "~" {
-			// Find home directory.
+		if strings.Index(searchStr, "~") == 0 {
+			// 以~开头时, Find home directory.
 			home, err := homedir.Dir()
 			if err != nil {
 				log.Fatalf("get home dir fail: %s", err.Error())
 			}
-			searchStr = home
+			searchStr = strings.ReplaceAll(searchStr, "~", home)
 		}
+		fmt.Println(searchStr)
 		search.Open(searchStr)
 	},
 }
