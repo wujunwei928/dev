@@ -41,11 +41,9 @@ jobs:
           then outputFile="$outputDir/dev.exe";\
           fi;\
           go build -o $outputFile;\
-          cd $outputDir && tar -zcvf dev-$tag_name-$GOOS-$GOARCH.tar.gz && mv dev-$tag_name-$GOOS-$GOARCH.tar.gz ../temp;\
+          cd $outputDir && tar -zcvf dev-${{ steps.get_version.outputs.VERSION }}-$GOOS-$GOARCH.tar.gz && mv dev-$tag_name-$GOOS-$GOARCH.tar.gz ../temp;\
           cd ../ && rm -rf $outputDir\
           done
-        with:
-          tag_name: ${{ steps.get_version.outputs.VERSION }}
 
       - name: Create Github Release
         id: create_release
