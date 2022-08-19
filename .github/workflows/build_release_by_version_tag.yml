@@ -1,4 +1,4 @@
-name: dev CLI Build Release
+name: dev Build Release By Version Tag
 
 on:
   push:
@@ -29,20 +29,17 @@ jobs:
 
       - name: Build CLI Binary
         run: |
-          mkdir temp
           GOARCH=amd64
           for goOs in linux windows darwin;\
-          do echo "Building $goOs amd64 binary...";\
+          do echo "Building ${goOs} amd64 binary...";\
           GOOS=$goOs;\
-          outputDir='output'
-          mkdir $outputDir
-          outputFile="$outputDir/dev"
-          if [[ ${OS} =~ 'windows' ]];\
-          then outputFile="$outputDir/dev.exe";\
+          outputFile="dev";\
+          if [[ ${GOOS} =~ 'windows' ]];\
+          then outputFile="dev.exe";\
           fi;\
           go build -o $outputFile;\
-          cd $outputDir && tar -zcvf dev-${{ steps.get_version.outputs.VERSION }}-$GOOS-$GOARCH.tar.gz . && mv dev-$tag_name-$GOOS-$GOARCH.tar.gz ../temp;\
-          cd ../ && rm -rf $outputDir;\
+          tar -zcvf dev-${{ steps.get_version.outputs.VERSION }}-${GOOS}-${GOARCH}.tar.gz ${outputFile};\
+          rm ${outputFile};\
           done
 
       - name: Create Github Release
@@ -62,4 +59,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          asset_paths: '["temp/dev-*"]'
+          asset_paths: '["dev*.tar.gz"]'
