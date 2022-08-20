@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	Version = "0.1.1" // 版本号
+	Version = "0.1.2" // 版本号
 
 	cfgFile string // 自定义配置路径, 类似 ~/.bashrc
 )
@@ -44,31 +44,30 @@ func init() {
 }
 
 func initConfig() {
-	// Don't forget to read config either from cfgFile or from home directory!
-	if cfgFile != "" {
+	// Use config file from the flag.
+	if len(cfgFile) > 0 {
 		// Use config file from the flag.
 		viper.SetConfigFile(cfgFile)
-	} else {
-		// Find home directory.
-		home, err := homedir.Dir()
-		if err != nil {
-			log.Fatalf("get home dir fail: %s", err.Error())
+		if err := viper.ReadInConfig(); err != nil {
+			log.Fatalf("viper read config fail: %s", err.Error())
 		}
-
-		// Search config in home directory with name ".dev.yaml"
-		viper.AddConfigPath(home)
-		viper.SetConfigName(".dev")
-		viper.SetConfigType("yaml")
-
 	}
+
+	// use config from home directory!
+	// Find home directory.
+	home, err := homedir.Dir()
+	if err != nil {
+		log.Fatalf("get home dir fail: %s", err.Error())
+	}
+
+	// Search config in home directory with name ".dev.yaml"
+	viper.AddConfigPath(home)
+	viper.SetConfigName("dev")
+	viper.SetConfigType("yaml")
 
 	if err := viper.ReadInConfig(); err != nil {
 		switch err.(type) {
 		case viper.ConfigFileNotFoundError:
-			if len(cfgFile) > 0 {
-				// 用户指定自定义配置路径时, 正常报文件未找到错误
-				log.Fatalf("viper read config fail: %s", err.Error())
-			}
 			// 用户未指定config路径时, 如果默认配置文件不存在, 自动创建
 			ViperInitSet()
 			err := viper.SafeWriteConfig()

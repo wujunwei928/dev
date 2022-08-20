@@ -20,7 +20,7 @@ func Open(path string) error {
 	if !ok {
 		return fmt.Errorf("don't know how to open things on %s platform", runtime.GOOS)
 	}
-	//如果网址包含&符号, 需要进行转义
+	// 终端执行命令, 如果网址包含&符号, 需要进行转义
 	if strings.Contains(path, "&") {
 		switch runtime.GOOS {
 		case "windows":

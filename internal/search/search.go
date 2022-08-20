@@ -72,9 +72,9 @@ func FormatSearchUrl(searchEngine string, query string) string {
 	return engineParam.Domain + strings.ReplaceAll(engineParam.Param, "{search_query}", url.QueryEscape(query))
 }
 
-func FormatCommandDesc() string {
+func FormatSearchCommandModeUsage() string {
 	commandDesc := make([]string, 0, len(EngineParamMap)+1)
-	commandDesc = append(commandDesc, "打开默认浏览器, 指定搜索引擎, 检索相关query，模式如下：")
+	commandDesc = append(commandDesc, "指定搜索引擎, 支持搜索引擎如下：")
 	for engineName, engineParam := range EngineParamMap {
 		commandDesc = append(commandDesc, engineName+": "+engineParam.Desc)
 	}

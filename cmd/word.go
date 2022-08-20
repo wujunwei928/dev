@@ -17,24 +17,17 @@ const (
 	ModeCamelCaseToUnderscore                 // 驼峰转下划线
 )
 
-var desc = strings.Join([]string{
-	"该子命令支持各种单词格式转换，模式如下：",
-	"1：全部转大写",
-	"2：全部转小写",
-	"3：下划线转大写驼峰",
-	"4：下划线转小写驼峰",
-	"5：驼峰转下划线",
-}, "\n")
-
-var wordStr string
 var wordMode int8
 
 // wordCmd represents the word command
 var wordCmd = &cobra.Command{
 	Use:   "word",
 	Short: "单词格式转换",
-	Long:  desc,
+	Long:  "单词格式转换",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		wordStr := args[0]
+
 		var content string
 		switch wordMode {
 		case ModeUpper:
@@ -58,6 +51,12 @@ var wordCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(wordCmd)
 
-	wordCmd.Flags().StringVarP(&wordStr, "str", "s", "", "请输入单词内容")
-	wordCmd.Flags().Int8VarP(&wordMode, "mode", "m", 0, "请输入单词转化的模式")
+	wordCmd.Flags().Int8VarP(&wordMode, "mode", "m", 0, strings.Join([]string{
+		"单词转换模式, 支持模式如下: ",
+		"1：全部转大写",
+		"2：全部转小写",
+		"3：下划线转大写驼峰",
+		"4：下划线转小写驼峰",
+		"5：驼峰转下划线",
+	}, "\n"))
 }

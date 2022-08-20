@@ -21,24 +21,17 @@ const (
 	EncodeTypeUnicode = "unicode" // unicode
 )
 
-var encodeDesc = strings.Join([]string{
-	"该子命令支持各种加密，模式如下：",
-	EncodeTypeMd5 + "：md5加密",
-	EncodeTypeSha1 + "：sha1加密",
-	EncodeTypeBase64 + "：base64加密",
-	EncodeTypeUrl + "：url加密",
-	EncodeTypeUnicode + "：unicode加密",
-}, "\n")
-
-var encodeStr string
 var encodeMode string
 
 // encodeCmd represents the encode command
 var encodeCmd = &cobra.Command{
 	Use:   "encode",
 	Short: "字符串加密",
-	Long:  encodeDesc,
+	Long:  "字符串加密",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		encodeStr := args[0]
+
 		var content string
 		switch encodeMode {
 		case EncodeTypeMd5:
@@ -67,6 +60,12 @@ var encodeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(encodeCmd)
 
-	encodeCmd.Flags().StringVarP(&encodeStr, "str", "s", "", "请输入单词内容")
-	encodeCmd.Flags().StringVarP(&encodeMode, "mode", "m", "", "请输入加密模式")
+	encodeCmd.Flags().StringVarP(&encodeMode, "mode", "m", "", strings.Join([]string{
+		"请输入加密模式，支持模式如下：",
+		EncodeTypeMd5 + "：md5加密",
+		EncodeTypeSha1 + "：sha1加密",
+		EncodeTypeBase64 + "：base64加密",
+		EncodeTypeUrl + "：url加密",
+		EncodeTypeUnicode + "：unicode加密",
+	}, "\n"))
 }

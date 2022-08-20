@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -32,26 +33,33 @@ const (
 	SearchConfigCliIsDesc = "search.cli_is_desc"
 )
 
-var searchStr string
-
 var searchTypeUSage = strings.Join([]string{
 	"检索方式: ",
-	"browser: 打开默认浏览器检索",
 	"cli: 终端显示搜索内容",
+	"browser: 打开默认浏览器检索",
 }, "\n")
 
 // searchCmd represents the search command
 var searchCmd = &cobra.Command{
-	Use:   "search",
-	Short: "搜索",
-	Long:  "指定搜索引擎, 检索相关query",
+	Use:     "search",
+	Short:   "搜索",
+	Long:    "指定搜索引擎, 检索相关query",
+	Example: getSearchExample(),
+	Args: func(cmd *cobra.Command, args []string) error {
+		if len(args) < 1 {
+			return errors.New(pterm.Red("requires at least 1 arg(s), only received 0"))
+		}
+		return nil
+	},
 	Run: func(cmd *cobra.Command, args []string) {
 		var err error
 
+		searchStr := strings.Join(args, " ") // 多个args以空格隔开
+		//fmt.Println(searchStr)
 		searchMode := viper.GetString(SearchConfigEngine)
 		searchType := viper.GetString(SearchConfigType)
 		searchCliDesc := viper.GetBool(SearchConfigCliIsDesc)
-		fmt.Println(searchMode, searchType, searchCliDesc)
+		//fmt.Println(searchMode, searchType, searchCliDesc)
 		if len(searchMode) <= 0 {
 			searchMode = viper.GetString("default_search_engine")
 		}
@@ -104,8 +112,7 @@ var searchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(searchCmd)
 
-	searchCmd.Flags().StringVarP(&searchStr, "str", "s", "", "请输入搜索query")
-	searchCmd.Flags().StringP("mode", "m", DefaultSearchEngine, search.FormatCommandDesc())
+	searchCmd.Flags().StringP("mode", "m", DefaultSearchEngine, search.FormatSearchCommandModeUsage())
 	searchCmd.Flags().StringP("type", "t", DefaultSearchType, searchTypeUSage)
 	searchCmd.Flags().BoolP("desc", "", DefaultCliIsDesc, "终端是否倒序展示: 默认倒序, 方便查看")
 
@@ -113,4 +120,28 @@ func init() {
 	viper.BindPFlag(SearchConfigEngine, searchCmd.Flags().Lookup("mode"))
 	viper.BindPFlag(SearchConfigType, searchCmd.Flags().Lookup("type"))
 	viper.BindPFlag(SearchConfigCliIsDesc, searchCmd.Flags().Lookup("desc"))
+}
+
+// search命令使用example
+func getSearchExample() string {
+	ptermTable := pterm.TableData{
+		{"描述", "命令"},
+		{`默认配置检索`, `dev search golang`},
+		{`指定搜索引擎检索`, `dev search -m baidu -t cli "docker practice"`},
+		{`打开系统默认浏览器检索`, `dev search -m baidu -t browser "k8s"`},
+		{`终端正序显示搜索结果`, `dev search -m bing -t cli --desc=false "golang cobra"`},
+		{`常规搜索引擎site检索`, `dev search -m bing "golang site:cnblogs.com"`},
+	}
+	itemRender, err := pterm.DefaultTable.
+		WithData(ptermTable).
+		WithHasHeader(true).
+		WithHeaderRowSeparator("-").
+		WithBoxed(true).
+		WithRowSeparator("-").
+		WithLeftAlignment().
+		Srender()
+	if err != nil {
+		return ""
+	}
+	return itemRender
 }

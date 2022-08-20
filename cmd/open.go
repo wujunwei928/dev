@@ -14,8 +14,10 @@ import (
 var openCmd = &cobra.Command{
 	Use:   "open",
 	Short: "打开网址或文件路径",
-	Long:  `打开网址或文件路径, 网址需要协议如:https://`,
+	Long:  `打开网址或文件路径, 网址需要协议, 如:https://`,
+	Args:  cobra.ExactArgs(1), // 只支持一个args
 	Run: func(cmd *cobra.Command, args []string) {
+		searchStr := args[0]
 		if strings.Index(searchStr, "~") == 0 {
 			// 以~开头时, Find home directory.
 			home, err := homedir.Dir()
@@ -31,6 +33,4 @@ var openCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(openCmd)
-
-	openCmd.Flags().StringVarP(&searchStr, "str", "s", "", "请输入搜索query")
 }
