@@ -2,8 +2,10 @@
    * [安装](#安装)
       * [go install 安装](#go-install-安装)
       * [下载可执行文件](#下载可执行文件)
+      * [使用docker](#使用docker)
    * [配置](#配置)
    * [命令列表](#命令列表)
+      * [install: 安裝命令到指定PATH](#install-安裝命令到指定path)
       * [search: 搜索服务](#search-搜索服务)
          * [浏览器搜索](#浏览器搜索)
          * [命令行](#命令行)
@@ -95,7 +97,7 @@ mv dev /usr/local/bin
 ```
 
 如果不确定PATH目录, 使用工具的`install命令`安装   
-install方法详见: 
+install方法详见: [install: 安裝命令到指定PATH](#install-安裝命令到指定path)
 
 ## 使用docker
 下载镜像  
@@ -114,7 +116,7 @@ docker exec -it dev_test /bin/dev -h
 ```
 
 http://127.0.0.1:8899体验文件http服务  
-功能说明详见: 
+功能说明详见: [http: http服务](#http-http服务)
 
 # 配置
 工具支持自定义配置, 检索相关命令
@@ -146,7 +148,7 @@ flag默认值, flag配置文件配置项, flag用户手动设置项 优先级说
 3. 如果配置文件有设置配置项, 但是用户设置了flag值, 使用用户设置的值, 即使设置的值和默认值相等, 
 
 # 命令列表
-# install: 安裝命令到指定PATH
+## install: 安裝命令到指定PATH
 安裝命令到指定PATH, 方便全局使用
 ```bash
 # linux, mac运行
@@ -170,6 +172,8 @@ flag默认值, flag配置文件配置项, flag用户手动设置项 优先级说
 ```bash
 $ dev search -h
 ```
+![image](https://user-images.githubusercontent.com/3396697/185736335-cf6956d9-42e7-4c0c-bcd3-e0a26a67359b.png)
+
 
 **使用方式**
 ```bash
