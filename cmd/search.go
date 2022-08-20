@@ -112,7 +112,7 @@ var searchCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(searchCmd)
 
-	searchCmd.Flags().StringP("mode", "m", DefaultSearchEngine, search.FormatCommandDesc())
+	searchCmd.Flags().StringP("mode", "m", DefaultSearchEngine, search.FormatSearchCommandModeUsage())
 	searchCmd.Flags().StringP("type", "t", DefaultSearchType, searchTypeUSage)
 	searchCmd.Flags().BoolP("desc", "", DefaultCliIsDesc, "终端是否倒序展示: 默认倒序, 方便查看")
 
@@ -122,6 +122,7 @@ func init() {
 	viper.BindPFlag(SearchConfigCliIsDesc, searchCmd.Flags().Lookup("desc"))
 }
 
+// search命令使用example
 func getSearchExample() string {
 	ptermTable := pterm.TableData{
 		{"描述", "命令"},

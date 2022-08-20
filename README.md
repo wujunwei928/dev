@@ -115,7 +115,7 @@ docker run -d -p 8899:8899 --name dev_test wujunwei928/dev
 docker exec -it dev_test /bin/dev -h
 ```
 
-http://127.0.0.1:8899体验文件http服务  
+`127.0.0.1:8899`体验文件http服务  
 功能说明详见: [http: http服务](#http-http服务)
 
 # 配置
