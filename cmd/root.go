@@ -11,14 +11,17 @@ import (
 )
 
 var (
+	Version = "0.1.1" // 版本号
+
 	cfgFile string // 自定义配置路径, 类似 ~/.bashrc
 )
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "dev",
-	Short: "研发工具箱",
-	Long:  `研发工具箱`,
+	Use:     "dev",
+	Short:   "研发工具箱",
+	Long:    `研发工具箱`,
+	Version: Version, // 指定版本号: 会有 -v 和 --version 选项, 用于打印版本号
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
