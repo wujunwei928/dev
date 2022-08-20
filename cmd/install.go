@@ -33,7 +33,7 @@ var installCmd = &cobra.Command{
 			options = append(options, fmt.Sprintf("%s", s))
 		}
 		selectedOption, _ := pterm.DefaultInteractiveSelect.
-			WithDefaultText("请选择要安装的路径: [可上方向键移动, 或输入关键字符检索]").
+			WithDefaultText("请选择要安装的路径: [可上方向键移动, 或输入关键字符检索, 回车选择]").
 			WithOptions(options).
 			WithMaxHeight(6).
 			Show()

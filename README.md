@@ -30,6 +30,7 @@
 | search | 搜索: 支持打开默认浏览器搜索 和 终端显示搜索结果 |
 | open | 打开网址或文件夹 |
 | http | http服务: 在运行文件夹启动http服务, 支持下载文件和上传文件, 方便文件传输 |
+| install | 安装命令到PATH |
 | encode | 字符串加密: md5, sha1, base64, url, unicode... |
 | decode | 字符串解密: base64, url, unicode |
 | time | 时间戳转时间, 时间转时间戳 |
@@ -53,6 +54,7 @@ Available Commands:
   encode      字符串加密
   help        Help about any command
   http        http服务
+  install     安装命令到PATH
   json        json转换和处理
   open        打开网址或文件路径
   search      搜索
@@ -63,6 +65,7 @@ Available Commands:
 Flags:
       --config string   config file (default is $HOME/.dev.yaml)
   -h, --help            help for dev
+  -v, --version         version for dev
 
 Use "dev [command] --help" for more information about a command.
 ```
@@ -75,8 +78,43 @@ go install github.com/wujunwei928/dev@latest
 ```
 
 ## 下载可执行文件
-下载指定系统的可执行文件  
+下载指定系统平台的可执行文件压缩包
 下载地址: https://github.com/wujunwei928/dev/releases
+
+解压下载文件, windows没有tar命令, 可用图形解压软件
+```bash
+tar -zxvf dev-*.tar.gz
+```
+
+> 可以将文件mv到PATH路径, 如果不确定PATH, 可以使用命令的install子命令安装  
+> ps: linux避免权限问题, mv 或 install 之前, 先切换到超级用户
+
+可以直接将文件mv到指定的PATH目录, 类似:
+```bash
+mv dev /usr/local/bin
+```
+
+如果不确定PATH目录, 使用工具的`install命令`安装   
+install方法详见: 
+
+## 使用docker
+下载镜像  
+```bash
+docker pull wujunwei928/dev
+```
+
+运行docker容器
+```bash
+docker run -d -p 8899:8899 --name dev_test wujunwei928/dev
+```
+
+体验命令
+```bash
+docker exec -it dev_test /bin/dev -h
+```
+
+http://127.0.0.1:8899体验文件http服务  
+功能说明详见: 
 
 # 配置
 工具支持自定义配置, 检索相关命令
@@ -86,11 +124,11 @@ go install github.com/wujunwei928/dev@latest
 ```yaml
 http:
 # http配置
-    port: 8811  # http端口
+    port: 8899  # http端口
 search:
 # 检索配置
     cli_is_desc: true       # 终端显示结果是否倒序
-    default_engine: kaifa   # 默认搜索引擎
+    default_engine: bing    # 默认搜索引擎
     default_type: cli       # 默认检索模式: browser:打开默认浏览器检索; cli: 终端显示搜索结果
 sql:
 # sql配置
@@ -108,61 +146,44 @@ flag默认值, flag配置文件配置项, flag用户手动设置项 优先级说
 3. 如果配置文件有设置配置项, 但是用户设置了flag值, 使用用户设置的值, 即使设置的值和默认值相等, 
 
 # 命令列表
+# install: 安裝命令到指定PATH
+安裝命令到指定PATH, 方便全局使用
+```bash
+# linux, mac运行
+./dev install
+
+# windows运行
+.\dev.exe install
+
+# 可上方向键移动, 或输入关键字符检索, 回车选择PATH路径安装
+请选择要安装的路径: [可上方向键移动, 或输入关键字符检索] [type to search]:
+> C:\Users\94206\go\bin
+  C:\Windows\System32\HWAudioDriverLibs
+  D:\software\Java\jdk1.8.0_202\bin
+  D:\software\Anaconda3
+  D:\software\Anaconda3\Library\mingw-w64\bin
+  D:\software\Anaconda3\Library\usr\bin
+```
+
 ## search: 搜索服务
 **查看帮助**
 ```bash
 $ dev search -h
-指定搜索引擎, 检索相关query
-
-Usage:
-  dev search [flags]
-
-Flags:
-      --desc          是否倒序展示: 默认倒序, 方便查看(只终端展示生效) (default true)
-  -h, --help          help for search
-  -m, --mode string   打开默认浏览器, 指定搜索引擎, 检索相关query，模式如下：
-                      360: 360搜索
-                      sogou: 搜狗搜索
-                      baidu: 百度搜索
-                      zhihu: 知乎搜索
-                      weixin: 搜狗微信搜索
-                      kaifa: 百度开发者搜索
-                      douban: 豆瓣搜索
-                      movie: 豆瓣电影搜索
-                      book: 豆瓣书籍搜索
-                      bing: 必应搜索
-                      google: 谷歌搜索
-                      github: Github搜索
-  -s, --str string    请输入搜索query
-  -t, --type string   检索方式:
-                      browser: 打开默认浏览器检索
-                      cli: 终端显示搜索内容
-
-Global Flags:
-      --config string   config file (default is $HOME/.dev.yaml)
-
 ```
-
-
 
 **使用方式**
 ```bash
 # 长标签模式
-dev search --type=搜索类型[打开默认浏览器/终端显示] --mode=搜索引擎[bing/baidu/google/...] --str="搜索query" --desc=true
+dev search --type=搜索类型[打开默认浏览器/终端显示] --mode=搜索引擎[bing/baidu/google/...] --desc=true  "搜索query"
 
 # 短标签模式
-dev search -t 搜索类型[打开默认浏览器/终端显示] -m 搜索引擎[bing/baidu/google/...] -s "搜索query" --desc=true
+dev search -t 搜索类型[打开默认浏览器/终端显示] -m 搜索引擎[bing/baidu/google/...] --desc=true "搜索query"
 ```
 
 ### 浏览器搜索
 **指定搜索引擎, 检索query**
 ```bash
-dev search -m bing -s "golang slice"
-```
-
-**不指定query, 浏览器打开搜索引擎首页**
-```bash
-dev search -m bing
+dev search -m bing -t browser "golang slice"
 ```
 
 ### 命令行
@@ -172,30 +193,38 @@ dev search -m bing
 
 **默认倒序显示**
 ```bash
-dev search -t cli -m bing -s "golang slice" --desc=false
+dev search -t cli -m bing "golang slice"
 ```
 
 **强制正序显示**
 ```bash
-dev search -t cli -m bing -s "golang slice" --desc=false
+dev search -t cli -m bing "golang slice" --desc=false
 ```
+
+**site检索: 搜索引擎的site检索, 指定检索某个网站的索引内容**
+```bash
+dev search "golang site:cnblogs.com"
+```
+
 
 ### 设置默认配置, 减少命令行书写
 ```yaml
 search:
-  default-type: cli
-  default-engine: bing
+    cli_is_desc: true       # 终端显示结果是否倒序
+    default_engine: bing    # 默认搜索引擎
+    default_type: cli       # 默认检索模式: browser:打开默认浏览器检索; cli: 终端显示搜索结果
 ```
+可以将自己常用的搜索习惯设置到配置, 平常检索只需 `dev search 检索关键词`
 
 ## open: 打开网址或文件夹
 **打开文件夹**
 ```bash
-dev open -s .
+dev open .
 ```
 
 **使用默认浏览器打开网址**
 ```bash
-dev open -s https://www.baidu.com/
+dev open https://www.baidu.com/
 ```
 > ps: 网址必须带协议
 
@@ -229,19 +258,19 @@ dev http -p 8080
 **使用方式**
 ```bash
 # md5加密
-dev encode -m md5 -s golang
+dev encode -m md5 golang
 
 # sha1加密
-dev encode -m sha1 -s golang
+dev encode -m sha1 golang
 
 # base64加密
-dev encode -m base64 -s golang
+dev encode -m base64 golang
 
 # url加密
-dev encode -m url -s "name=张三&age=18"
+dev encode -m url "name=张三&age=18"
 
 # sha1加密
-dev encode -m unicode -s 中国人
+dev encode -m unicode 中国人
 ```
 
 ## decode: 字符串解密
@@ -250,13 +279,13 @@ dev encode -m unicode -s 中国人
 **打开文件夹**
 ```bash
 # base64
-dev decode -m base64 -s 5Lit5Zu95Lq6
+dev decode -m base64 5Lit5Zu95Lq6
 
 # url
-dev decode -m url -s name%3D%E5%BC%A0%E4%B8%89%26age%3D18
+dev decode -m url name%3D%E5%BC%A0%E4%B8%89%26age%3D18
 
 # unicode
-dev decode -m unicode -s "\u4e2d\u56fd\u4eba"
+dev decode -m unicode "\u4e2d\u56fd\u4eba"
 ```
 
 ## time: 时间转换
@@ -284,7 +313,7 @@ dev time calc -c "2022-08-17 19:40:11" -d -10m
 ## json: json工具
 **json转golang结构体**
 ```bash
-dev json struct -s '{"name":"zhangsan","list":["a", "b", "c"]}'
+dev json struct '{"name":"zhangsan","list":["a", "b", "c"]}'
 ```
 
 ## sql: sql工具
@@ -328,19 +357,19 @@ dev word -h
 **使用方式**
 ```bash
 # 转大写
-dev word -m 1 -s abc
+dev word -m 1 abc
 
 # 转小写
-dev word -m 2 -s ABC
+dev word -m 2 ABC
 
 # 下划线转驼峰
-dev word -m 3 -s abc_def
+dev word -m 3 abc_def
 
 # 下划线转驼峰(首个单词首字母小写)
-dev word -m 4 -s abc_def
+dev word -m 4 abc_def
 
 # 驼峰转下划线
-dev word -m 5 -s AbcDefGhk
+dev word -m 5 AbcDefGhk
 ```
 
 
@@ -353,6 +382,7 @@ dev word -m 5 -s AbcDefGhk
 | [github.com/tidwall/gjson](https://github.com/tidwall/gjson) | 使用一行代码获取JSON的值 |
 | [github.com/PuerkitoBio/goquery](https://github.com/PuerkitoBio/goquery)  | jQuery语法解析html页面 |
 | [github.com/mitchellh/go-homedir](https://github.com/mitchellh/go-homedir)  | 用于检测用户的主目录 |
+| [github.com/pterm/pterm](https://github.com/pterm/pterm)  | 终端样式组件 |
 
 
 # 常见问题

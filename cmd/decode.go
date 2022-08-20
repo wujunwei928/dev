@@ -16,22 +16,17 @@ const (
 	DecodeTypeUnicode = "unicode" // unicode
 )
 
-var decodeDesc = strings.Join([]string{
-	"该子命令支持各种解密，模式如下：",
-	DecodeTypeBase64 + "：base64解密",
-	DecodeTypeUrl + "：url解密",
-	DecodeTypeUnicode + "：unicode解密",
-}, "\n")
-
-var decodeStr string
 var decodeMode string
 
 // decodeCmd represents the decode command
 var decodeCmd = &cobra.Command{
 	Use:   "decode",
 	Short: "字符串解密",
-	Long:  decodeDesc,
+	Long:  "字符串解密",
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		decodeStr := args[0]
+
 		var content string
 		switch decodeMode {
 		case DecodeTypeBase64:
@@ -67,6 +62,10 @@ var decodeCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(decodeCmd)
 
-	decodeCmd.Flags().StringVarP(&decodeStr, "str", "s", "", "请输入单词内容")
-	decodeCmd.Flags().StringVarP(&decodeMode, "mode", "m", "", "请输入加密模式")
+	decodeCmd.Flags().StringVarP(&decodeMode, "mode", "m", "", strings.Join([]string{
+		"请输入解密模式, 支持模式如下: ",
+		DecodeTypeBase64 + "：base64解密",
+		DecodeTypeUrl + "：url解密",
+		DecodeTypeUnicode + "：unicode解密",
+	}, "\n"))
 }
