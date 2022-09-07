@@ -3,6 +3,8 @@ package cmd
 import (
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 
 	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/viper"
@@ -61,22 +63,26 @@ func initConfig() {
 	}
 
 	// Search config in home directory with name ".dev.yaml"
-	viper.AddConfigPath(home)
-	viper.SetConfigName("dev")
-	viper.SetConfigType("yaml")
+	defaultCfgFile, err := filepath.Abs(path.Join(home, ".dev.yaml"))
+	if err != nil {
+		log.Fatalf("get default config path fail: %s", err.Error())
+	}
+	viper.SetConfigFile(defaultCfgFile)
+	if _, err := os.Stat(defaultCfgFile); err != nil {
+		if !os.IsNotExist(err) {
+			log.Fatalf("check default config file is exists fail: %s", err.Error())
+		}
+
+		// 用户未指定config路径时, 如果默认配置文件不存在, 自动创建
+		ViperInitSet()
+		err := viper.SafeWriteConfigAs(defaultCfgFile)
+		if err != nil {
+			log.Fatalf("default config not exist, auto create fail: %s", err.Error())
+		}
+	}
 
 	if err := viper.ReadInConfig(); err != nil {
-		switch err.(type) {
-		case viper.ConfigFileNotFoundError:
-			// 用户未指定config路径时, 如果默认配置文件不存在, 自动创建
-			ViperInitSet()
-			err := viper.SafeWriteConfig()
-			if err != nil {
-				log.Fatalf("default config not exist, auto create fail: %s", err.Error())
-			}
-		default:
-			log.Fatalf("viper read config fail: %s", err.Error())
-		}
+		log.Fatalf("viper read config fail: %s", err.Error())
 	}
 }
 
