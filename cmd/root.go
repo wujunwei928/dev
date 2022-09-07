@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	Version = "0.1.2" // 版本号
+	Version = "0.1.3" // 版本号
 
 	cfgFile string // 自定义配置路径, 类似 ~/.bashrc
 )
