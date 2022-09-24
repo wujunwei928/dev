@@ -8,6 +8,7 @@ import (
 )
 
 // SystemCallCommands 系统调用命令
+// 参考: GOROOT/src/cmd/internal/browser/browser.go
 var SystemCallCommands = map[string][]string{
 	"windows": {"cmd", "/c", "start"},
 	"darwin":  {"open"},
