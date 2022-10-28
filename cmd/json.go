@@ -1,6 +1,9 @@
 package cmd
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/pterm/pterm"
 	"log"
 	"strings"
 
@@ -36,8 +39,29 @@ var json2structCmd = &cobra.Command{
 	},
 }
 
+var jsonPrintCmd = &cobra.Command{
+	Use:   "print",
+	Short: "格式化json，类似jq",
+	Long:  "格式化json，类似jq",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		jsonStr := args[0]
+		var jsonInterface interface{}
+		err := json.Unmarshal([]byte(jsonStr), &jsonInterface)
+		if err != nil {
+			log.Fatalln(pterm.Red("输入非标准json，报错信息：", err.Error()))
+		}
+		jsonBytes, err := json.MarshalIndent(jsonInterface, "", "    ")
+		if err != nil {
+			log.Fatalln(pterm.Red("json格式化失败，报错信息：", err.Error()))
+		}
+		fmt.Println(pterm.Green(string(jsonBytes)))
+	},
+}
+
 func init() {
 	rootCmd.AddCommand(jsonCmd)
 
 	jsonCmd.AddCommand(json2structCmd)
+	jsonCmd.AddCommand(jsonPrintCmd)
 }
