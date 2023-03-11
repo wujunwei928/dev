@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -62,13 +61,13 @@ var installCmd = &cobra.Command{
 			log.Fatalln("install fail, you can manually install dev by copying the binary to path folder.")
 		}
 		// 读取当前运行文件内容
-		input, err := ioutil.ReadFile(copyFromFile)
+		input, err := os.ReadFile(copyFromFile)
 		if err != nil {
 			pterm.Warning.Printf(err.Error())
 			log.Fatalln("install fail, you can manually install dev by copying the binary to path folder.")
 		}
 		// 将文件内容写到目标文件
-		err = ioutil.WriteFile(copyToFile, input, 0744)
+		err = os.WriteFile(copyToFile, input, 0744)
 		if err != nil {
 			pterm.Warning.Printf(err.Error())
 			log.Fatalln("install fail, you can manually install dev by copying the binary to path folder.")

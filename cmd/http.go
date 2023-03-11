@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -131,7 +130,7 @@ var httpCmd = &cobra.Command{
 				//t.Fatal("copying contents:", err)
 				fmt.Fprintf(w, "copying contents:"+err.Error())
 			}
-			err = ioutil.WriteFile(fh.Filename, b.Bytes(), 0644)
+			err = os.WriteFile(fh.Filename, b.Bytes(), 0644)
 			if err != nil {
 				fmt.Fprintf(w, "write upload file: "+err.Error())
 			}
