@@ -2,6 +2,7 @@ package search
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
 	"runtime"
 	"strings"
@@ -20,6 +21,17 @@ func Open(path string) error {
 	cmd, ok := SystemCallCommands[runtime.GOOS]
 	if !ok {
 		return fmt.Errorf("don't know how to open things on %s platform", runtime.GOOS)
+	}
+	// 判断是否在windows wsl环境中
+	if runtime.GOOS == "linux" {
+		unameCmd := exec.Command("uname", "-a")
+		stdoutStdErr, err := unameCmd.CombinedOutput()
+		if err != nil {
+			log.Fatalln("check is wsl fail" + err.Error())
+		}
+		if strings.Contains(strings.ToLower(string(stdoutStdErr)), "microsoft") {
+			cmd = []string{"explorer.exe"}
+		}
 	}
 	// 终端执行命令, 如果网址包含&符号, 需要进行转义
 	if strings.Contains(path, "&") {
