@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"runtime"
 	"strings"
+
+	"github.com/mitchellh/go-homedir"
 )
 
 // SystemCallCommands 系统调用命令
@@ -18,6 +20,15 @@ var SystemCallCommands = map[string][]string{
 
 // Open 调用系统命令打开网址或文件夹
 func Open(path string) error {
+	if strings.Index(path, "~") == 0 {
+		// 以~开头时, Find home directory.
+		home, err := homedir.Dir()
+		if err != nil {
+			log.Fatalf("get home dir fail: %s", err.Error())
+		}
+		path = strings.ReplaceAll(path, "~", home)
+	}
+
 	cmd, ok := SystemCallCommands[runtime.GOOS]
 	if !ok {
 		return fmt.Errorf("don't know how to open things on %s platform", runtime.GOOS)
