@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"net/url"
+	"os/exec"
 	"strconv"
 	"strings"
 
@@ -29,6 +30,7 @@ func consoleCompleter(d prompt.Document) []prompt.Suggest {
 		{Text: "open", Description: "使用默认程序打开文件"},
 		{Text: "//", Description: "使用默认浏览器打开网址"},
 		{Text: "??", Description: "使用搜索引擎搜索关键字"},
+		{Text: ">", Description: "执行命令行命令"},
 	}
 	return prompt.FilterHasPrefix(s, d.GetWordBeforeCursor(), true)
 }
@@ -118,6 +120,19 @@ var consoleCmd = &cobra.Command{
 				if err != nil {
 					println("搜索失败: " + err.Error())
 				}
+			case ">":
+				runName := args[1]
+				runArgs := make([]string, 0, 1)
+				if len(args) > 2 {
+					runArgs = args[2:]
+				}
+				runCmd := exec.Command(runName, runArgs...)
+				runCmdOutput, runCmdErr := runCmd.CombinedOutput()
+				if runCmdErr != nil {
+					println("执行命令失败: " + runCmdErr.Error() + ", " + string(runCmdOutput))
+					continue
+				}
+				println(string(runCmdOutput))
 			default:
 				println("暂不支持该命令")
 			}
