@@ -42,6 +42,7 @@ var searchTypeUSage = strings.Join([]string{
 // searchCmd represents the search command
 var searchCmd = &cobra.Command{
 	Use:     "search",
+	Aliases: []string{"??"},
 	Short:   "搜索",
 	Long:    "指定搜索引擎, 检索相关query",
 	Example: getSearchExample(),
