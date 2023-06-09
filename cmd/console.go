@@ -38,8 +38,8 @@ func consoleCompleter(d prompt.Document) []prompt.Suggest {
 // consoleCmd represents the decode command
 var consoleCmd = &cobra.Command{
 	Use:   "console",
-	Short: "类似ipython的交互式命令行, 支持像飞书一样使用 / 快速检索命令",
-	Long:  "类似ipython的交互式命令行, 支持像飞书一样使用 / 快速检索命令",
+	Short: "类似ipython的交互式命令行",
+	Long:  "类似ipython的交互式命令行",
 	Run: func(cmd *cobra.Command, args []string) {
 		for {
 			t := prompt.Input("> ", consoleCompleter)
