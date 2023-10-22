@@ -43,6 +43,14 @@ func init() {
 	cobra.OnInitialize(initConfig)
 	// 指定自定义配置文件
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dev.yaml)")
+
+	// 添加子命令
+	rootCmd.AddCommand(NewCmdDecode())
+	rootCmd.AddCommand(NewCmdEncode())
+	rootCmd.AddCommand(NewCmdOpen())
+	rootCmd.AddCommand(NewCmdTime())
+	rootCmd.AddCommand(NewCmdUrl())
+	rootCmd.AddCommand(NewCmdGo())
 }
 
 func initConfig() {
