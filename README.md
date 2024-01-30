@@ -262,19 +262,19 @@ dev http -p 8080
 **使用方式**
 ```bash
 # md5加密
-dev encode -m md5 golang
+dev encode md5 golang
 
 # sha1加密
-dev encode -m sha1 golang
+dev encode sha1 golang
 
 # base64加密
-dev encode -m base64 golang
+dev encode base64 golang
 
 # url加密
-dev encode -m url "name=张三&age=18"
+dev encode url "name=张三&age=18"
 
 # sha1加密
-dev encode -m unicode 中国人
+dev encode unicode 中国人
 ```
 
 ## decode: 字符串解密
@@ -283,13 +283,13 @@ dev encode -m unicode 中国人
 **打开文件夹**
 ```bash
 # base64
-dev decode -m base64 5Lit5Zu95Lq6
+dev decode base64 5Lit5Zu95Lq6
 
 # url
-dev decode -m url name%3D%E5%BC%A0%E4%B8%89%26age%3D18
+dev decode url name%3D%E5%BC%A0%E4%B8%89%26age%3D18
 
 # unicode
-dev decode -m unicode "\u4e2d\u56fd\u4eba"
+dev decode unicode "\u4e2d\u56fd\u4eba"
 ```
 
 ## time: 时间转换
