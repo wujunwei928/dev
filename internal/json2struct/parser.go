@@ -64,7 +64,12 @@ func (p *Parser) Json2Struct() string {
 					{CamelCase: false, Value: valueType},
 				},
 			})
-			p.Output.appendSegment("%s %s", fields[0].Name, fields[0].Type)
+			p.Output.appendSegment(
+				"%s %s %s",
+				fields[0].Name,
+				fields[0].Type,
+				fmt.Sprintf("`json:\"%s\"`", fields[0].oriName),
+			)
 		}
 	}
 	p.Output.appendSuffix()

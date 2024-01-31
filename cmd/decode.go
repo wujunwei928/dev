@@ -10,11 +10,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const (
-	DecodeTypeBase64  = "base64"  // base64解密
-	DecodeTypeUrl     = "url"     // urldecode
-	DecodeTypeUnicode = "unicode" // unicode
-)
+type decodeSubCmd struct{}
 
 func NewCmdDecode() *cobra.Command {
 	cmd := &cobra.Command{
@@ -23,14 +19,15 @@ func NewCmdDecode() *cobra.Command {
 		Long:  "字符串解密",
 	}
 
-	cmd.AddCommand(NewCmdDecodeBase64())
-	cmd.AddCommand(NewCmdDecodeUrl())
-	cmd.AddCommand(NewCmdDecodeUnicode())
+	subCmd := decodeSubCmd{}
+	cmd.AddCommand(subCmd.NewCmdBase64())
+	cmd.AddCommand(subCmd.NewCmdUrl())
+	cmd.AddCommand(subCmd.NewCmdUnicode())
 
 	return cmd
 }
 
-func NewCmdDecodeBase64() *cobra.Command {
+func (d decodeSubCmd) NewCmdBase64() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "base64",
 		Short: "base64解密",
@@ -51,7 +48,7 @@ func NewCmdDecodeBase64() *cobra.Command {
 	return cmd
 }
 
-func NewCmdDecodeUrl() *cobra.Command {
+func (d decodeSubCmd) NewCmdUrl() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "url",
 		Short: "url解密",
@@ -71,7 +68,7 @@ func NewCmdDecodeUrl() *cobra.Command {
 	return cmd
 }
 
-func NewCmdDecodeUnicode() *cobra.Command {
+func (d decodeSubCmd) NewCmdUnicode() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unicode",
 		Short: "unicode解密",

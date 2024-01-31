@@ -17,8 +17,9 @@ type FieldValue struct {
 }
 
 type Field struct {
-	Name string
-	Type string
+	Name    string
+	Type    string
+	oriName string
 }
 
 type Fields []*Field
@@ -33,7 +34,11 @@ func (f *Fields) appendSegment(name string, segment FieldSegment) {
 
 		s = append(s, value)
 	}
-	*f = append(*f, &Field{Name: word.UnderscoreToUpperCamelCase(name), Type: fmt.Sprintf(segment.Format, s...)})
+	*f = append(*f, &Field{
+		Name:    word.UnderscoreToUpperCamelCase(name),
+		Type:    fmt.Sprintf(segment.Format, s...),
+		oriName: name,
+	})
 }
 
 func (f *Fields) removeDuplicate() Fields {

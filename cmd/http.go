@@ -12,9 +12,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/spf13/viper"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 const (
@@ -25,26 +24,30 @@ const (
 	HttpConfigPort = "http.port"
 )
 
-// httpCmd represents the http command
-var httpCmd = &cobra.Command{
-	Use:   "http",
-	Short: "http服务",
-	Long:  `启动http服务上传下载文件, 类似python的http.server`,
-	Run: func(cmd *cobra.Command, args []string) {
-		strHttpPort := strconv.Itoa(viper.GetInt(HttpConfigPort))
+func NewCmdHttp() *cobra.Command {
+	var (
+		UseUpload = false
+	)
 
-		// 静态文件, 文件下载
-		staticDir := "./"
-		if pwd, err := os.Getwd(); err == nil {
-			staticDir = pwd
-		}
-		fs := http.FileServer(http.Dir(staticDir))
-		http.Handle("/static/", http.StripPrefix("/static/", fs))
+	cmd := &cobra.Command{
+		Use:   "http",
+		Short: "http服务",
+		Long:  `启动http服务上传下载文件, 类似python的http.server`,
+		Run: func(cmd *cobra.Command, args []string) {
+			strHttpPort := strconv.Itoa(viper.GetInt(HttpConfigPort))
 
-		// 文件上传页面
-		http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+			// 静态文件, 文件下载
+			staticDir := "./"
+			if pwd, err := os.Getwd(); err == nil {
+				staticDir = pwd
+			}
+			fs := http.FileServer(http.Dir(staticDir))
+			http.Handle("/static/", http.StripPrefix("/static/", fs))
 
-			tmpl := template.Must(template.New("http upload").Parse(`
+			// 文件上传页面
+			http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+
+				tmpl := template.Must(template.New("http upload").Parse(`
 <html>
     <head>
         <title>Upload File</title>
@@ -68,7 +71,7 @@ var httpCmd = &cobra.Command{
     <h1 style="margin: 36px;"><a href="/static">下载服务器文件</a></h1>
 
     <hr/>
-
+	{{if .use_upload}}
     <h1>上传文件</h1>
     <form >
         <div class="drag-wrapper">
@@ -112,53 +115,58 @@ var httpCmd = &cobra.Command{
             });
          })
         </script>
+		{{end}}
     </body>
 </html>`))
-			tmpl.Execute(w, nil)
-		})
+				tmpl.Execute(w, map[string]interface{}{
+					"use_upload": UseUpload,
+				})
+			})
 
-		// 上传文件
-		http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
-			f, fh, err := r.FormFile("upload-file")
-			if err != nil {
-				//t.Fatalf("FormFile(%q): %q", key, err)
-				fmt.Fprintf(w, "FormFile fail:"+err.Error())
-			}
-			var b bytes.Buffer
-			_, err = io.Copy(&b, f)
-			if err != nil {
-				//t.Fatal("copying contents:", err)
-				fmt.Fprintf(w, "copying contents:"+err.Error())
-			}
-			err = os.WriteFile(fh.Filename, b.Bytes(), 0644)
-			if err != nil {
-				fmt.Fprintf(w, "write upload file: "+err.Error())
-			}
+			// 上传文件
+			http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+				f, fh, err := r.FormFile("upload-file")
+				if err != nil {
+					//t.Fatalf("FormFile(%q): %q", key, err)
+					fmt.Fprintf(w, "FormFile fail:"+err.Error())
+				}
+				var b bytes.Buffer
+				_, err = io.Copy(&b, f)
+				if err != nil {
+					//t.Fatal("copying contents:", err)
+					fmt.Fprintf(w, "copying contents:"+err.Error())
+				}
+				err = os.WriteFile(fh.Filename, b.Bytes(), 0644)
+				if err != nil {
+					fmt.Fprintf(w, "write upload file: "+err.Error())
+				}
 
-			// 拼接上传文件保存绝对路径
-			pwd, _ := os.Getwd()
-			fileFullSavePath := filepath.Join(pwd, fh.Filename)
-			fmt.Fprintf(w, "file upload success: "+fileFullSavePath)
-		})
+				// 拼接上传文件保存绝对路径
+				pwd, _ := os.Getwd()
+				fileFullSavePath := filepath.Join(pwd, fh.Filename)
+				fmt.Fprintf(w, "file upload success: "+fileFullSavePath)
+			})
 
-		// 打印静态文件服务器地址, 方便访问
-		localIp, _ := GetLocalIp() // 获取本机IP
-		fmt.Println("start listen: http://" + localIp + ":" + strHttpPort)
-		http.ListenAndServe(":"+strHttpPort, nil)
+			// 打印静态文件服务器地址, 方便访问
+			localIp, _ := GetLocalIp() // 获取本机IP
+			fmt.Println("start listen: http://" + localIp + ":" + strHttpPort)
+			http.ListenAndServe(":"+strHttpPort, nil)
 
-	},
-}
-
-func init() {
-	rootCmd.AddCommand(httpCmd)
+		},
+	}
 
 	// viper配置 和 flag 绑定, 使用 viper.Get 获取对应配置项时的顺序, 因为后续需要用viper获取flag, 这里不需要用IntVarP, 用IntP即可
 	// 参考: https://github.com/spf13/cobra/issues/23
 	// If no config file is specified, use default flag value.
 	// If config file is specified, and the user did not set the flag, use the value in the config file
 	// If config file is specified, but the user did set the flag, use the value specified by the user, even if it's just the default flag value.
-	httpCmd.Flags().IntP("port", "p", 8899, "http端口")
-	viper.BindPFlag(HttpConfigPort, httpCmd.Flags().Lookup("port"))
+	cmd.Flags().IntP("port", "p", 8899, "http端口")
+	viper.BindPFlag(HttpConfigPort, cmd.Flags().Lookup("port"))
+
+	// 设置bool参数，是否启用上传功能，默认使用
+	cmd.Flags().BoolVarP(&UseUpload, "use_upload", "", UseUpload, "是否启用上传功能")
+
+	return cmd
 }
 
 func GetLocalIp() (string, error) {

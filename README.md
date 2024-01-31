@@ -246,6 +246,11 @@ dev http
 dev http -p 8080
 ```
 
+**启用上传文件功能**
+```bash
+dev http --use_upload
+```
+
 **主界面**
 
 ![image](https://user-images.githubusercontent.com/3396697/185265872-2bf24b42-1281-442e-8cf6-5eb90e4f93ac.png)
@@ -299,7 +304,7 @@ dev decode unicode "\u4e2d\u56fd\u4eba"
 dev time parse
 
 # 解析指定时间戳
-dev time parse -t 123
+dev time parse 123
 ```
 
 **计算时间**

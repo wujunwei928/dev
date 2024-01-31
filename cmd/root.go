@@ -49,6 +49,7 @@ func init() {
 	rootCmd.AddCommand(NewCmdEncode())
 	rootCmd.AddCommand(NewCmdOpen())
 	rootCmd.AddCommand(NewCmdTime())
+	rootCmd.AddCommand(NewCmdHttp())
 	rootCmd.AddCommand(NewCmdUrl())
 	rootCmd.AddCommand(NewCmdGo())
 }

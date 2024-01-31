@@ -12,6 +12,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type encodeSubCmd struct{}
+
 func NewCmdEncode() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "encode",
@@ -20,16 +22,17 @@ func NewCmdEncode() *cobra.Command {
 	}
 
 	// 子命令
-	cmd.AddCommand(NewCmdEncodeMd5())
-	cmd.AddCommand(NewCmdEncodeSha1())
-	cmd.AddCommand(NewCmdEncodeBase64())
-	cmd.AddCommand(NewCmdEncodeUrl())
-	cmd.AddCommand(NewCmdEncodeUnicode())
+	subCmd := encodeSubCmd{}
+	cmd.AddCommand(subCmd.NewCmdMd5())
+	cmd.AddCommand(subCmd.NewCmdSha1())
+	cmd.AddCommand(subCmd.NewCmdBase64())
+	cmd.AddCommand(subCmd.NewCmdUrl())
+	cmd.AddCommand(subCmd.NewCmdUnicode())
 
 	return cmd
 }
 
-func NewCmdEncodeMd5() *cobra.Command {
+func (e encodeSubCmd) NewCmdMd5() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "md5",
 		Short: "md5加密",
@@ -48,7 +51,7 @@ func NewCmdEncodeMd5() *cobra.Command {
 	return cmd
 }
 
-func NewCmdEncodeSha1() *cobra.Command {
+func (e encodeSubCmd) NewCmdSha1() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "sha1",
 		Short: "sha1加密",
@@ -68,7 +71,7 @@ func NewCmdEncodeSha1() *cobra.Command {
 	return cmd
 }
 
-func NewCmdEncodeBase64() *cobra.Command {
+func (e encodeSubCmd) NewCmdBase64() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "base64",
 		Short: "base64加密",
@@ -86,7 +89,7 @@ func NewCmdEncodeBase64() *cobra.Command {
 	return cmd
 }
 
-func NewCmdEncodeUrl() *cobra.Command {
+func (e encodeSubCmd) NewCmdUrl() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "url",
 		Short: "url加密",
@@ -105,7 +108,7 @@ func NewCmdEncodeUrl() *cobra.Command {
 	return cmd
 }
 
-func NewCmdEncodeUnicode() *cobra.Command {
+func (e encodeSubCmd) NewCmdUnicode() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "unicode",
 		Short: "unicode加密",

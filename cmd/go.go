@@ -100,7 +100,11 @@ func (c GoSubCmd) newSearchCmd() *cobra.Command {
 }
 
 func (c GoSubCmd) NewCmdBuild() *cobra.Command {
-	var buildOutputName string
+	var (
+		err             error
+		buildOutputName string
+		buildOutputPath = "build_output"
+	)
 
 	cmd := &cobra.Command{
 		Use:   "build [# times] [string]",
@@ -117,8 +121,8 @@ func (c GoSubCmd) NewCmdBuild() *cobra.Command {
 
 			osList := []string{"linux", "windows", "darwin"}
 			archList := []string{"amd64", "arm64"}
-			os.Mkdir("build_output", 0744)
-			os.Chdir("build_output")
+			os.Mkdir(buildOutputPath, 0744)
+			os.Chdir(buildOutputPath)
 			for _, goOs := range osList {
 				for _, goArch := range archList {
 					outputName := buildOutputName
@@ -132,9 +136,9 @@ func (c GoSubCmd) NewCmdBuild() *cobra.Command {
 					os.MkdirAll(filepath.Join(goOs, goArch), 0744)
 					command := exec.Command("go", "build", "-o", path.Join(goOs, goArch, outputName), fileName)
 					fmt.Println(command)
-					err := command.Start()
+					_, err = command.CombinedOutput()
 					if err != nil {
-						fmt.Println(err.Error())
+						log.Fatalln("start build fail", err.Error())
 					}
 				}
 			}
@@ -142,6 +146,7 @@ func (c GoSubCmd) NewCmdBuild() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&buildOutputName, "name", "n", "", "output binary name")
+	cmd.Flags().StringVarP(&buildOutputPath, "path", "p", buildOutputPath, "output binary save path")
 
 	return cmd
 }
