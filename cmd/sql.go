@@ -26,71 +26,81 @@ const (
 	SqlConfigCharset  = "sql.charset"
 )
 
-var tableName string
+type sqlSubCmd struct{}
 
-// sqlCmd represents the sql command
-var sqlCmd = &cobra.Command{
-	Use:   "sql",
-	Short: "sql转换和处理",
-	Long:  "sql转换和处理",
-	Run:   func(cmd *cobra.Command, args []string) {},
+func NewCmdSql() *cobra.Command {
+	var cmd = &cobra.Command{
+		Use:   "sql",
+		Short: "sql转换和处理",
+		Long:  "sql转换和处理",
+		Run:   func(cmd *cobra.Command, args []string) {},
+	}
+
+	// 添加子命令
+	subCmd := sqlSubCmd{}
+	cmd.AddCommand(subCmd.NewCmdStruct())
+
+	return cmd
 }
 
-var sql2structCmd = &cobra.Command{
-	Use:   "struct",
-	Short: "sql转换",
-	Long:  "sql转换",
-	Run: func(cmd *cobra.Command, args []string) {
-		username := viper.GetString(SqlConfigUserName)
-		password := viper.GetString(SqlConfigPassword)
-		host := viper.GetString(SqlConfigHost)
-		charset := viper.GetString(SqlConfigCharset)
-		dbType := viper.GetString(SqlConfigType)
-		dbName := viper.GetString(SqlConfigDb)
+func (s sqlSubCmd) NewCmdStruct() *cobra.Command {
+	var (
+		tableName string
+	)
 
-		dbInfo := &sql2struct.DBInfo{
-			DBType:   dbType,
-			Host:     host,
-			UserName: username,
-			Password: password,
-			Charset:  charset,
-		}
-		dbModel := sql2struct.NewDBModel(dbInfo)
-		err := dbModel.Connect()
-		if err != nil {
-			log.Fatalf("dbModel.Connect err: %v", err)
-		}
-		columns, err := dbModel.GetColumns(dbName, tableName)
-		if err != nil {
-			log.Fatalf("dbModel.GetColumns err: %v", err)
-		}
+	cmd := &cobra.Command{
+		Use:   "struct",
+		Short: "sql转换",
+		Long:  "sql转换",
+		Run: func(cmd *cobra.Command, args []string) {
+			username := viper.GetString(SqlConfigUserName)
+			password := viper.GetString(SqlConfigPassword)
+			host := viper.GetString(SqlConfigHost)
+			charset := viper.GetString(SqlConfigCharset)
+			dbType := viper.GetString(SqlConfigType)
+			dbName := viper.GetString(SqlConfigDb)
 
-		template := sql2struct.NewStructTemplate()
-		templateColumns := template.AssemblyColumns(columns)
-		err = template.Generate(tableName, templateColumns)
-		if err != nil {
-			log.Fatalf("template.Generate err: %v", err)
-		}
-	},
-}
+			dbInfo := &sql2struct.DBInfo{
+				DBType:   dbType,
+				Host:     host,
+				UserName: username,
+				Password: password,
+				Charset:  charset,
+			}
+			dbModel := sql2struct.NewDBModel(dbInfo)
+			err := dbModel.Connect()
+			if err != nil {
+				log.Fatalf("dbModel.Connect err: %v", err)
+			}
+			columns, err := dbModel.GetColumns(dbName, tableName)
+			if err != nil {
+				log.Fatalf("dbModel.GetColumns err: %v", err)
+			}
 
-func init() {
-	rootCmd.AddCommand(sqlCmd)
+			template := sql2struct.NewStructTemplate()
+			templateColumns := template.AssemblyColumns(columns)
+			err = template.Generate(tableName, templateColumns)
+			if err != nil {
+				log.Fatalf("template.Generate err: %v", err)
+			}
+		},
+	}
 
-	sqlCmd.AddCommand(sql2structCmd)
-	sql2structCmd.Flags().StringP("username", "", "", "请输入数据库的账号")
-	sql2structCmd.Flags().StringP("password", "", "", "请输入数据库的密码")
-	sql2structCmd.Flags().StringP("host", "", DefaultSqlHost, "请输入数据库的HOST")
-	sql2structCmd.Flags().StringP("charset", "", DefaultSqlCharset, "请输入数据库的编码")
-	sql2structCmd.Flags().StringP("type", "", DefaultSqlType, "请输入数据库实例类型")
-	sql2structCmd.Flags().StringP("db", "", "", "请输入数据库名称")
-	sql2structCmd.Flags().StringVarP(&tableName, "table", "", "", "请输入表名称")
+	cmd.Flags().StringP("username", "", "", "请输入数据库的账号")
+	cmd.Flags().StringP("password", "", "", "请输入数据库的密码")
+	cmd.Flags().StringP("host", "", DefaultSqlHost, "请输入数据库的HOST")
+	cmd.Flags().StringP("charset", "", DefaultSqlCharset, "请输入数据库的编码")
+	cmd.Flags().StringP("type", "", DefaultSqlType, "请输入数据库实例类型")
+	cmd.Flags().StringP("db", "", "", "请输入数据库名称")
+	cmd.Flags().StringVarP(&tableName, "table", "", "", "请输入表名称")
 
 	// flag 和 viper 绑定
-	viper.BindPFlag(SqlConfigUserName, sql2structCmd.Flags().Lookup("username"))
-	viper.BindPFlag(SqlConfigPassword, sql2structCmd.Flags().Lookup("password"))
-	viper.BindPFlag(SqlConfigHost, sql2structCmd.Flags().Lookup("host"))
-	viper.BindPFlag(SqlConfigCharset, sql2structCmd.Flags().Lookup("charset"))
-	viper.BindPFlag(SqlConfigType, sql2structCmd.Flags().Lookup("type"))
-	viper.BindPFlag(SqlConfigDb, sql2structCmd.Flags().Lookup("db"))
+	viper.BindPFlag(SqlConfigUserName, cmd.Flags().Lookup("username"))
+	viper.BindPFlag(SqlConfigPassword, cmd.Flags().Lookup("password"))
+	viper.BindPFlag(SqlConfigHost, cmd.Flags().Lookup("host"))
+	viper.BindPFlag(SqlConfigCharset, cmd.Flags().Lookup("charset"))
+	viper.BindPFlag(SqlConfigType, cmd.Flags().Lookup("type"))
+	viper.BindPFlag(SqlConfigDb, cmd.Flags().Lookup("db"))
+
+	return cmd
 }

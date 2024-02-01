@@ -45,13 +45,18 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.dev.yaml)")
 
 	// 添加子命令
-	rootCmd.AddCommand(NewCmdDecode())
-	rootCmd.AddCommand(NewCmdEncode())
-	rootCmd.AddCommand(NewCmdOpen())
-	rootCmd.AddCommand(NewCmdTime())
-	rootCmd.AddCommand(NewCmdHttp())
-	rootCmd.AddCommand(NewCmdUrl())
-	rootCmd.AddCommand(NewCmdGo())
+	rootCmd.AddCommand(NewCmdConsole()) // 类似ipython的交互式命令行
+	rootCmd.AddCommand(NewCmdDecode())  // 字符串解密
+	rootCmd.AddCommand(NewCmdEncode())  // 字符串加密
+	rootCmd.AddCommand(NewCmdInstall()) // 安装命令到PATH
+	rootCmd.AddCommand(NewCmdSearch())  // 搜索
+	rootCmd.AddCommand(NewCmdOpen())    // 打开文件或目录
+	rootCmd.AddCommand(NewCmdTime())    // 时间转换
+	rootCmd.AddCommand(NewCmdHttp())    // http服务
+	rootCmd.AddCommand(NewCmdWord())    // 单词格式转换
+	rootCmd.AddCommand(NewCmdUrl())     // 打开网址，文件夹或文件
+	rootCmd.AddCommand(NewCmdSql())     // sql相关
+	rootCmd.AddCommand(NewCmdGo())      // go相关
 }
 
 func initConfig() {
