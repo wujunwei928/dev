@@ -35,8 +35,9 @@ func NewCmdGo() *cobra.Command {
 
 func (c GoSubCmd) newSearchCmd() *cobra.Command {
 	var (
-		pkgName  string
-		isUpdate bool
+		pkgName   string
+		isInstall bool
+		isUpdate  bool
 
 		commonUsePkgList = []string{
 			"github.com/hibiken/asynq",
@@ -61,7 +62,8 @@ func (c GoSubCmd) newSearchCmd() *cobra.Command {
 			"go.mongodb.org/mongo-driver/mongo",
 			"github.com/elastic/go-elasticsearch/v8",
 			"github.com/golang-module/carbon/v2",
-			"github.com/xuri/excelize",
+			"github.com/xuri/excelize/v2",
+			"github.com/pterm/pterm",
 		}
 	)
 
@@ -70,31 +72,60 @@ func (c GoSubCmd) newSearchCmd() *cobra.Command {
 		Short: "模糊检索常用go module包",
 		Long:  "模糊检索常用go module包",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			filterPkgList := commonUsePkgList
+			if len(pkgName) > 0 {
+				filterPkgList = lo.Filter(commonUsePkgList, func(item string, index int) bool {
+					return strings.Contains(strings.ToLower(item), strings.ToLower(pkgName))
+				})
+			}
 
-			searchPkgList := lo.Filter(commonUsePkgList, func(item string, index int) bool {
-				return strings.Contains(strings.ToLower(item), strings.ToLower(pkgName))
-			})
-
-			if len(searchPkgList) == 0 {
+			if len(filterPkgList) == 0 {
 				log.Fatal("未找到相关包")
 			}
 
+			searchPkgList := filterPkgList
+			if len(filterPkgList) > 10 {
+				options := make([]string, 0, len(filterPkgList))
+				for _, pkg := range filterPkgList {
+					options = append(options, pkg)
+				}
+				searchPkgList, _ = pterm.DefaultInteractiveMultiselect.
+					WithOptions(options).
+					WithDefaultText("请选择需要的go package: [可上方向键移动, 或输入关键字符检索, 回车选择]").
+					WithMaxHeight(6).
+					Show()
+			}
+
 			// 打印检索到的包
-			printPrefix := "go get"
+			printPrefix := []string{"go", "get"}
 			if isUpdate {
-				printPrefix = "go get -u"
+				printPrefix = append(printPrefix, "-u")
 			}
 			fmt.Println("检索到的包:")
 			for _, pkg := range searchPkgList {
-				fmt.Println(printPrefix, pkg)
+				if isInstall {
+					command := exec.Command("go", "get", pkg)
+					if isUpdate {
+						command = exec.Command("go", "get", "-u", pkg)
+					}
+					installOutput, err := command.CombinedOutput()
+					if err != nil {
+						log.Fatalln("安装失败", err.Error())
+					} else {
+						fmt.Println(string(installOutput))
+					}
+				} else {
+					fmt.Println(strings.Join(append(printPrefix, pkg), " "))
+				}
 			}
 
 			return nil
 		},
 	}
 
+	cmd.Flags().BoolVarP(&isInstall, "install", "i", false, "是否安装")
+	cmd.Flags().BoolVarP(&isUpdate, "update", "u", false, "是否更新, 与install同时使用")
 	cmd.Flags().StringVarP(&pkgName, "pkg_name", "p", "", "包名关键字")
-	cmd.Flags().BoolVarP(&isUpdate, "update", "u", false, "是否更新")
 
 	return cmd
 }
