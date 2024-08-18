@@ -56,8 +56,9 @@ func NewCmdConsole() *cobra.Command {
 		Short: "类似ipython的交互式命令行",
 		Long:  "类似ipython的交互式命令行",
 		Run: func(cmd *cobra.Command, args []string) {
+			historyList := make([]string, 0, 100)
 			for {
-				t := prompt.Input("> ", consoleCompleter)
+				t := prompt.Input("> ", consoleCompleter, prompt.OptionHistory(historyList))
 				t = strings.TrimSpace(t)
 				if t == "exit" {
 					break
@@ -74,6 +75,8 @@ func NewCmdConsole() *cobra.Command {
 					println("参数不足")
 					continue
 				}
+
+				isValidCommand := true
 				keyWord := strings.Join(consoleArgs[1:], " ")
 				switch consoleArgs[0] {
 				case "md5":
@@ -153,7 +156,11 @@ func NewCmdConsole() *cobra.Command {
 					}
 					println(string(runCmdOutput))
 				default:
+					isValidCommand = false
 					println("暂不支持该命令")
+				}
+				if isValidCommand {
+					historyList = append(historyList, t)
 				}
 			}
 		},
