@@ -13,10 +13,10 @@ func NewCmdOpen() *cobra.Command {
 		Short: "打开网址或文件路径",
 		Long:  `打开网址或文件路径, 网址需要协议, 如:https://`,
 		Args:  cobra.ExactArgs(1), // 只支持一个args
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			searchStr := args[0]
 			fmt.Println(searchStr)
-			search.Open(searchStr)
+			return search.Open(searchStr)
 		},
 	}
 
