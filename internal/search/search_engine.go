@@ -7,10 +7,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tidwall/gjson"
-
 	"github.com/PuerkitoBio/goquery"
 	"github.com/go-resty/resty/v2"
+	"github.com/tidwall/gjson"
 )
 
 // KeyVal Golang中map遍历没有顺序, 使用[]KeyVal代替map[string]string返回

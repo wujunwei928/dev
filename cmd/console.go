@@ -11,12 +11,10 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/pterm/pterm"
-
-	"github.com/wujunwei928/dev/internal/search"
-
 	"github.com/c-bata/go-prompt"
+	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+	"github.com/wujunwei928/dev/internal/search"
 )
 
 var ConsolePromptSuggestList = []prompt.Suggest{

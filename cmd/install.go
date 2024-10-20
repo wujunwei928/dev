@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/pterm/pterm"
-
 	"github.com/spf13/cobra"
 )
 

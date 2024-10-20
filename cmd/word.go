@@ -4,9 +4,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/wujunwei928/dev/internal/word"
-
 	"github.com/spf13/cobra"
+	"github.com/wujunwei928/dev/internal/word"
 )
 
 const (

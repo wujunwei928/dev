@@ -1,10 +1,11 @@
 package cmd
 
 import (
-	"github.com/pterm/pterm"
-	"github.com/spf13/cobra"
 	"os/exec"
 	"strings"
+
+	"github.com/pterm/pterm"
+	"github.com/spf13/cobra"
 )
 
 func init() {

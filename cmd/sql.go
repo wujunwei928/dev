@@ -3,9 +3,8 @@ package cmd
 import (
 	"log"
 
-	"github.com/spf13/viper"
-
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 	"github.com/wujunwei928/dev/internal/sql2struct"
 )
 
