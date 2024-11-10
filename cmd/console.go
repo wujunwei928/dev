@@ -14,6 +14,7 @@ import (
 	"github.com/c-bata/go-prompt"
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+
 	"github.com/wujunwei928/dev/internal/search"
 )
 

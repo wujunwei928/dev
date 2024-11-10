@@ -8,6 +8,7 @@ import (
 
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+
 	"github.com/wujunwei928/dev/internal/json2struct"
 )
 
