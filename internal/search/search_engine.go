@@ -16,13 +16,50 @@ type KeyVal struct {
 	Val string
 }
 
+// ConcurrentSearchResult 单个引擎的并发搜索结果
+type ConcurrentSearchResult struct {
+	Engine string
+	Items  [][]KeyVal
+	Err    error
+}
+
+// ConcurrentSearch 并发搜索多个搜索引擎，按顺序返回每个引擎的结果
+func ConcurrentSearch(engines []string, query string) []ConcurrentSearchResult {
+	ch := make(chan ConcurrentSearchResult, len(engines))
+
+	for i, engine := range engines {
+		go func(idx int, eng string) {
+			items, err := RequestDetail(eng, query)
+			ch <- ConcurrentSearchResult{Engine: eng, Items: items, Err: err}
+		}(i, engine)
+	}
+
+	// 按完成顺序收集，然后按引擎索引排列
+	ordered := make([]ConcurrentSearchResult, len(engines))
+	for i := range engines {
+		r := <-ch
+		// 找到该结果对应的引擎索引
+		for j, eng := range engines {
+			if eng == r.Engine {
+				ordered[j] = r
+				break
+			}
+		}
+		// 最后一个接收完毕后关闭
+		if i == len(engines)-1 {
+			close(ch)
+		}
+	}
+	return ordered
+}
+
 func RequestDetail(searchEngine string, query string) ([][]KeyVal, error) {
 	var (
 		parseRes [][]KeyVal
 		err      error
 	)
 
-	engineParam := getEngineParamCached(searchEngine)
+	engineParam := getEngineParam(searchEngine)
 
 	reqUrl := engineParam.Domain + strings.ReplaceAll(engineParam.Param, "{search_query}", url.QueryEscape(query))
 	referUrl := engineParam.Domain
@@ -34,8 +71,6 @@ func RequestDetail(searchEngine string, query string) ([][]KeyVal, error) {
 
 	client := GetHTTPClient()
 	res, err := client.R().
-		EnableTrace().
-		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36 Edg/104.0.1293.54").
 		SetHeader("Referer", referUrl).
 		Get(reqUrl)
 	if err != nil {

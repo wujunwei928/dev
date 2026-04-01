@@ -44,16 +44,16 @@ func TestFormatSearchUrl_UnknownEngine(t *testing.T) {
 	}
 }
 
-func TestGetEngineParamCached(t *testing.T) {
-	param := getEngineParamCached(EngineBing)
+func TestGetEngineParam(t *testing.T) {
+	param := getEngineParam(EngineBing)
 	if param.Domain == "" {
 		t.Error("expected non-empty Domain")
 	}
 
-	// 第二次调用应命中缓存
-	param2 := getEngineParamCached(EngineBing)
-	if param2.Domain != param.Domain {
-		t.Error("cache should return same param")
+	// 未知引擎应回退到 bing
+	fallback := getEngineParam("nonexistent")
+	if fallback.Domain != param.Domain {
+		t.Error("unknown engine should fallback to bing")
 	}
 }
 

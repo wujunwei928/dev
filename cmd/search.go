@@ -72,9 +72,14 @@ func NewCmdSearch() *cobra.Command {
 			if concurrent {
 				// 并发搜索多个主流搜索引擎
 				searchEngines := []string{search.EngineBing, search.EngineBaidu, search.EngineGoogle}
-				flattenedResults := search.ConcurrentSearch(searchEngines, searchStr)
-				// 将扁平化的结果转换为原来的二维结构
-				searchRes = [][]search.KeyVal{flattenedResults}
+				concurrentResults := search.ConcurrentSearch(searchEngines, searchStr)
+				for _, cr := range concurrentResults {
+					if cr.Err != nil {
+						fmt.Fprintf(cmd.OutOrStderr(), "搜索引擎 %s 请求失败: %v\n", cr.Engine, cr.Err)
+						continue
+					}
+					searchRes = append(searchRes, cr.Items...)
+				}
 			} else {
 				// 单个搜索引擎搜索
 				searchRes, err = search.RequestDetail(searchMode, searchStr)
