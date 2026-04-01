@@ -1,14 +1,7 @@
 package cmd
 
 import (
-	"crypto/md5"
-	"crypto/sha1"
-	"encoding/base64"
-	"encoding/hex"
-	"fmt"
-	"net/url"
 	"os/exec"
-	"strconv"
 	"strings"
 
 	"github.com/c-bata/go-prompt"
@@ -24,14 +17,6 @@ var ConsolePromptSuggestList = []prompt.Suggest{
 	{Text: "??", Description: "使用搜索引擎搜索关键字"},
 	{Text: ">", Description: "执行命令行命令"},
 	{Text: "open", Description: "使用默认程序打开文件"},
-	{Text: "md5", Description: "md5加密"},
-	{Text: "sha1", Description: "sha1加密"},
-	{Text: "base64_encode", Description: "base64加密"},
-	{Text: "base64_decode", Description: "base64解密"},
-	{Text: "url_encode", Description: "url加密"},
-	{Text: "url_decode", Description: "url解密"},
-	{Text: "unicode_encode", Description: "unicode加密"},
-	{Text: "unicode_decode", Description: "unicode解密"},
 }
 
 func consoleCompleter(d prompt.Document) []prompt.Suggest {
@@ -78,53 +63,6 @@ func NewCmdConsole() *cobra.Command {
 				isValidCommand := true
 				keyWord := strings.Join(consoleArgs[1:], " ")
 				switch consoleArgs[0] {
-				case "md5":
-					hash := md5.Sum([]byte(keyWord))
-					content := hex.EncodeToString(hash[:])
-					println("md5加密结果: " + content)
-				case "sha1":
-					hash := sha1.New()
-					hash.Write([]byte(keyWord))
-					content := hex.EncodeToString(hash.Sum(nil))
-					println("sha1加密结果: " + content)
-				case "base64_encode":
-					content := base64.StdEncoding.EncodeToString([]byte(keyWord))
-					println("base64加密结果: " + content)
-				case "base64_decode":
-					content, err := base64.StdEncoding.DecodeString(keyWord)
-					if err != nil {
-						println("base64解密失败: " + err.Error())
-						continue
-					}
-					println("base64解密结果: " + string(content))
-				case "url_encode":
-					content := url.QueryEscape(keyWord)
-					println("url加密结果: " + content)
-				case "url_decode":
-					content, err := url.QueryUnescape(keyWord)
-					if err != nil {
-						println("url解密失败: " + err.Error())
-						continue
-					}
-					println("url解密结果: " + content)
-				case "unicode_encode":
-					var builder strings.Builder
-					for _, v := range keyWord {
-						builder.WriteString(fmt.Sprintf("\\u%04x", v))
-					}
-					content := builder.String()
-					println("unicode加密结果: " + content)
-				case "unicode_decode":
-					// unicode转换中文需要的格式 "内容" , 注意要传双引号
-					if !strings.Contains(keyWord, `"`) {
-						keyWord = `"` + keyWord + `"`
-					}
-					s, err := strconv.Unquote(keyWord)
-					if err != nil {
-						println("unicode解密失败: " + err.Error())
-						continue
-					}
-					println("unicode解密结果: " + s)
 				case "open":
 					err := search.Open(keyWord)
 					if err != nil {
