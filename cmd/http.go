@@ -117,7 +117,7 @@ func NewCmdHttp() *cobra.Command {
 		{{end}}
     </body>
 </html>`))
-				tmpl.Execute(w, map[string]interface{}{
+				tmpl.Execute(w, map[string]any{
 					"use_upload": UseUpload,
 				})
 			})
