@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -18,11 +17,11 @@ func NewCmdInstall() *cobra.Command {
 		Use:   "install",
 		Short: "安装命令到PATH",
 		Long:  `安装命令到PATH, 方便使用`,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			// 获取环境变量的文件夹列表
 			pathList := parseEnvPath()
 			if len(pathList) <= 0 {
-				log.Fatalln("no path detected, you can manually install dev by copying the binary to path folder.")
+				return fmt.Errorf("no path detected, you can manually install dev by copying the binary to path folder")
 			}
 
 			// 终端选择项
@@ -36,7 +35,7 @@ func NewCmdInstall() *cobra.Command {
 				WithMaxHeight(6).
 				Show()
 			if len(selectedOption) <= 0 {
-				log.Fatalln("selected path option is empty, please check")
+				return fmt.Errorf("selected path option is empty, please check")
 			}
 			pterm.Info.Printfln("selected path option: %s", pterm.Green(selectedOption))
 
@@ -45,7 +44,7 @@ func NewCmdInstall() *cobra.Command {
 			copyFromFile, err := filepath.Abs(os.Args[0])
 			if err != nil {
 				pterm.Warning.Printf(err.Error())
-				log.Fatalln("install fail, you can manually install dev by copying the binary to path folder.")
+				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			// window cmd在当前文件夹运行时, 可以不带exe
 			if runtime.GOOS == "windows" && !strings.Contains(copyFromFile, ".exe") {
@@ -57,21 +56,22 @@ func NewCmdInstall() *cobra.Command {
 			pterm.Info.Printfln("copy to: " + copyToFile)
 			if err != nil {
 				pterm.Warning.Printf(err.Error())
-				log.Fatalln("install fail, you can manually install dev by copying the binary to path folder.")
+				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			// 读取当前运行文件内容
 			input, err := os.ReadFile(copyFromFile)
 			if err != nil {
 				pterm.Warning.Printf(err.Error())
-				log.Fatalln("install fail, you can manually install dev by copying the binary to path folder.")
+				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			// 将文件内容写到目标文件
 			err = os.WriteFile(copyToFile, input, 0744)
 			if err != nil {
 				pterm.Warning.Printf(err.Error())
-				log.Fatalln("install fail, you can manually install dev by copying the binary to path folder.")
+				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			pterm.Success.Println("install success")
+			return nil
 		},
 	}
 

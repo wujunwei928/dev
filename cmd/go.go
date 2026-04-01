@@ -3,7 +3,6 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -79,7 +78,7 @@ func (c GoSubCmd) newSearchCmd() *cobra.Command {
 			}
 
 			if len(filterPkgList) == 0 {
-				log.Fatal("未找到相关包")
+				return fmt.Errorf("未找到相关包")
 			}
 
 			searchPkgList := filterPkgList
@@ -109,7 +108,7 @@ func (c GoSubCmd) newSearchCmd() *cobra.Command {
 					}
 					installOutput, err := command.CombinedOutput()
 					if err != nil {
-						log.Fatalln("安装失败", err.Error())
+						return fmt.Errorf("安装失败: %w", err)
 					} else {
 						fmt.Println(string(installOutput))
 					}
@@ -146,7 +145,7 @@ func (c GoSubCmd) NewCmdBuild() *cobra.Command {
 			}
 			return nil
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			fileName, _ := filepath.Abs(args[0])
 
 			osList := []string{"linux", "windows", "darwin"}
@@ -168,10 +167,11 @@ func (c GoSubCmd) NewCmdBuild() *cobra.Command {
 					fmt.Println(command)
 					_, err = command.CombinedOutput()
 					if err != nil {
-						log.Fatalln("start build fail", err.Error())
+						return fmt.Errorf("start build fail: %w", err)
 					}
 				}
 			}
+			return nil
 		},
 	}
 

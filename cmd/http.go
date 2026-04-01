@@ -32,7 +32,7 @@ func NewCmdHttp() *cobra.Command {
 		Use:   "http",
 		Short: "http服务",
 		Long:  `启动http服务上传下载文件, 类似python的http.server`,
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			strHttpPort := strconv.Itoa(viper.GetInt(HttpConfigPort))
 
 			// 静态文件, 文件下载
@@ -124,37 +124,41 @@ func NewCmdHttp() *cobra.Command {
 
 			// 上传文件 - 流式处理
 			http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
+				// 限制上传大小为100MB
+				r.Body = http.MaxBytesReader(w, r.Body, 100<<20)
+
 				f, fh, err := r.FormFile("upload-file")
 				if err != nil {
 					fmt.Fprintf(w, "FormFile fail:"+err.Error())
 					return
 				}
 				defer f.Close()
-				
-				// 直接流式写入文件
-				dst, err := os.Create(fh.Filename)
+
+				// 使用 filepath.Base 防止路径穿越
+				safeFilename := filepath.Base(fh.Filename)
+				dst, err := os.Create(safeFilename)
 				if err != nil {
 					fmt.Fprintf(w, "Create file fail:"+err.Error())
 					return
 				}
 				defer dst.Close()
-				
+
 				_, err = io.Copy(dst, f)
 				if err != nil {
 					fmt.Fprintf(w, "Copy file fail:"+err.Error())
 					return
 				}
-				
+
 				// 拼接上传文件保存绝对路径
 				pwd, _ := os.Getwd()
-				fileFullSavePath := filepath.Join(pwd, fh.Filename)
+				fileFullSavePath := filepath.Join(pwd, safeFilename)
 				fmt.Fprintf(w, "file upload success: "+fileFullSavePath)
 			})
 
 			// 打印静态文件服务器地址, 方便访问
 			localIp, _ := GetLocalIp() // 获取本机IP
 			fmt.Println("start listen: http://" + localIp + ":" + strHttpPort)
-			http.ListenAndServe(":"+strHttpPort, nil)
+			return http.ListenAndServe(":"+strHttpPort, nil)
 
 		},
 	}

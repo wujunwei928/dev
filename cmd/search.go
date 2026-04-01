@@ -3,10 +3,8 @@ package cmd
 import (
 	"errors"
 	"fmt"
-	"log"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -30,47 +28,11 @@ const (
 
 // 搜索配置项
 const (
-	SearchConfigEngine    = "search.default_engine"
-	SearchConfigType      = "search.default_type"
-	SearchConfigCliIsDesc = "search.cli_is_desc"
+	SearchConfigEngine     = "search.default_engine"
+	SearchConfigType       = "search.default_type"
+	SearchConfigCliIsDesc  = "search.cli_is_desc"
 	SearchConfigConcurrent = "search.concurrent"
 )
-
-// concurrentSearch 并发搜索多个搜索引擎
-func concurrentSearch(searchEngines []string, query string) []search.KeyVal {
-	var wg sync.WaitGroup
-	results := make([][][]search.KeyVal, len(searchEngines))
-	errs := make([]error, len(searchEngines))
-	
-	for i, engine := range searchEngines {
-		wg.Add(1)
-		go func(idx int, eng string) {
-			defer wg.Done()
-			res, err := search.RequestDetail(eng, query)
-			if err != nil {
-				errs[idx] = err
-				return
-			}
-			results[idx] = res
-		}(i, engine)
-	}
-	
-	wg.Wait()
-	
-	// 合并结果
-	var finalResult []search.KeyVal
-	for _, res := range results {
-		if res != nil {
-			for _, engineResults := range res {
-				for _, item := range engineResults {
-					finalResult = append(finalResult, item)
-				}
-			}
-		}
-	}
-	
-	return finalResult
-}
 
 func NewCmdSearch() *cobra.Command {
 	var concurrent bool
@@ -92,7 +54,7 @@ func NewCmdSearch() *cobra.Command {
 			}
 			return nil
 		},
-		Run: func(cmd *cobra.Command, args []string) {
+		RunE: func(cmd *cobra.Command, args []string) error {
 			var err error
 
 			searchStr := strings.Join(args, " ") // 多个args以空格隔开
@@ -104,7 +66,7 @@ func NewCmdSearch() *cobra.Command {
 			if len(searchMode) <= 0 {
 				searchMode = viper.GetString("default_search_engine")
 			}
-			
+
 			var searchRes [][]search.KeyVal
 			if concurrent {
 				// 并发搜索多个主流搜索引擎
@@ -116,10 +78,10 @@ func NewCmdSearch() *cobra.Command {
 				// 单个搜索引擎搜索
 				searchRes, err = search.RequestDetail(searchMode, searchStr)
 				if err != nil {
-					log.Fatalf("request search engine fail: %s", err.Error())
+					return fmt.Errorf("request search engine fail: %w", err)
 				}
 			}
-			
+
 			switch searchType {
 			case SearchTypeCli:
 				keyStyle := pterm.NewStyle(pterm.FgLightBlue, pterm.Bold) // 标题cli样式
@@ -156,8 +118,9 @@ func NewCmdSearch() *cobra.Command {
 
 			}
 			if err != nil {
-				log.Fatalf("检索失败: %s", err.Error())
+				return fmt.Errorf("检索失败: %w", err)
 			}
+			return nil
 		},
 	}
 
