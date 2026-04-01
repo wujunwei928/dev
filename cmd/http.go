@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"html/template"
 	"io"
@@ -123,24 +122,29 @@ func NewCmdHttp() *cobra.Command {
 				})
 			})
 
-			// 上传文件
+			// 上传文件 - 流式处理
 			http.HandleFunc("/upload", func(w http.ResponseWriter, r *http.Request) {
 				f, fh, err := r.FormFile("upload-file")
 				if err != nil {
-					//t.Fatalf("FormFile(%q): %q", key, err)
 					fmt.Fprintf(w, "FormFile fail:"+err.Error())
+					return
 				}
-				var b bytes.Buffer
-				_, err = io.Copy(&b, f)
+				defer f.Close()
+				
+				// 直接流式写入文件
+				dst, err := os.Create(fh.Filename)
 				if err != nil {
-					//t.Fatal("copying contents:", err)
-					fmt.Fprintf(w, "copying contents:"+err.Error())
+					fmt.Fprintf(w, "Create file fail:"+err.Error())
+					return
 				}
-				err = os.WriteFile(fh.Filename, b.Bytes(), 0644)
+				defer dst.Close()
+				
+				_, err = io.Copy(dst, f)
 				if err != nil {
-					fmt.Fprintf(w, "write upload file: "+err.Error())
+					fmt.Fprintf(w, "Copy file fail:"+err.Error())
+					return
 				}
-
+				
 				// 拼接上传文件保存绝对路径
 				pwd, _ := os.Getwd()
 				fileFullSavePath := filepath.Join(pwd, fh.Filename)

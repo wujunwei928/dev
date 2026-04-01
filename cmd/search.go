@@ -6,6 +6,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
@@ -32,9 +33,47 @@ const (
 	SearchConfigEngine    = "search.default_engine"
 	SearchConfigType      = "search.default_type"
 	SearchConfigCliIsDesc = "search.cli_is_desc"
+	SearchConfigConcurrent = "search.concurrent"
 )
 
+// concurrentSearch 并发搜索多个搜索引擎
+func concurrentSearch(searchEngines []string, query string) []search.KeyVal {
+	var wg sync.WaitGroup
+	results := make([][][]search.KeyVal, len(searchEngines))
+	errs := make([]error, len(searchEngines))
+	
+	for i, engine := range searchEngines {
+		wg.Add(1)
+		go func(idx int, eng string) {
+			defer wg.Done()
+			res, err := search.RequestDetail(eng, query)
+			if err != nil {
+				errs[idx] = err
+				return
+			}
+			results[idx] = res
+		}(i, engine)
+	}
+	
+	wg.Wait()
+	
+	// 合并结果
+	var finalResult []search.KeyVal
+	for _, res := range results {
+		if res != nil {
+			for _, engineResults := range res {
+				for _, item := range engineResults {
+					finalResult = append(finalResult, item)
+				}
+			}
+		}
+	}
+	
+	return finalResult
+}
+
 func NewCmdSearch() *cobra.Command {
+	var concurrent bool
 	var searchTypeUSage = strings.Join([]string{
 		"检索方式: ",
 		"cli: 终端显示搜索内容",
@@ -65,13 +104,24 @@ func NewCmdSearch() *cobra.Command {
 			if len(searchMode) <= 0 {
 				searchMode = viper.GetString("default_search_engine")
 			}
-			switch searchType {
-			case SearchTypeCli:
-				// 终端显示搜索结果
-				searchRes, err := search.RequestDetail(searchMode, searchStr)
+			
+			var searchRes [][]search.KeyVal
+			if concurrent {
+				// 并发搜索多个主流搜索引擎
+				searchEngines := []string{search.EngineBing, search.EngineBaidu, search.EngineGoogle}
+				flattenedResults := search.ConcurrentSearch(searchEngines, searchStr)
+				// 将扁平化的结果转换为原来的二维结构
+				searchRes = [][]search.KeyVal{flattenedResults}
+			} else {
+				// 单个搜索引擎搜索
+				searchRes, err = search.RequestDetail(searchMode, searchStr)
 				if err != nil {
 					log.Fatalf("request search engine fail: %s", err.Error())
 				}
+			}
+			
+			switch searchType {
+			case SearchTypeCli:
 				keyStyle := pterm.NewStyle(pterm.FgLightBlue, pterm.Bold) // 标题cli样式
 				termRenderList := make([]string, 0, len(searchRes))
 				for i, s := range searchRes {
@@ -114,11 +164,13 @@ func NewCmdSearch() *cobra.Command {
 	cmd.Flags().StringP("mode", "m", DefaultSearchEngine, search.FormatSearchCommandModeUsage())
 	cmd.Flags().StringP("type", "t", DefaultSearchType, searchTypeUSage)
 	cmd.Flags().BoolP("desc", "", DefaultCliIsDesc, "终端是否倒序展示: 默认倒序, 方便查看")
+	cmd.Flags().BoolVar(&concurrent, "concurrent", false, "并发搜索多个搜索引擎 (Bing, Baidu, Google)")
 
 	// flag 和 viper 绑定
 	viper.BindPFlag(SearchConfigEngine, cmd.Flags().Lookup("mode"))
 	viper.BindPFlag(SearchConfigType, cmd.Flags().Lookup("type"))
 	viper.BindPFlag(SearchConfigCliIsDesc, cmd.Flags().Lookup("desc"))
+	viper.BindPFlag(SearchConfigConcurrent, cmd.Flags().Lookup("concurrent"))
 
 	return cmd
 }

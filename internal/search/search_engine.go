@@ -5,10 +5,8 @@ import (
 	"errors"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/PuerkitoBio/goquery"
-	"github.com/go-resty/resty/v2"
 	"github.com/tidwall/gjson"
 )
 
@@ -24,7 +22,7 @@ func RequestDetail(searchEngine string, query string) ([][]KeyVal, error) {
 		err      error
 	)
 
-	engineParam := getEngineParam(searchEngine)
+	engineParam := getEngineParamCached(searchEngine)
 
 	reqUrl := engineParam.Domain + strings.ReplaceAll(engineParam.Param, "{search_query}", url.QueryEscape(query))
 	referUrl := engineParam.Domain
@@ -34,8 +32,7 @@ func RequestDetail(searchEngine string, query string) ([][]KeyVal, error) {
 		reqUrl = strings.ReplaceAll(engineParam.AjaxUrl, "{search_query}", url.QueryEscape(query))
 	}
 
-	client := resty.New()
-	client.SetTimeout(2000 * time.Millisecond)
+	client := GetHTTPClient()
 	res, err := client.R().
 		EnableTrace().
 		SetHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.81 Safari/537.36 Edg/104.0.1293.54").

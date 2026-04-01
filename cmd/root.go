@@ -6,7 +6,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -45,16 +44,11 @@ func init() {
 
 	// 添加子命令
 	rootCmd.AddCommand(NewCmdConsole()) // 类似ipython的交互式命令行
-	rootCmd.AddCommand(NewCmdDecode())  // 字符串解密
-	rootCmd.AddCommand(NewCmdEncode())  // 字符串加密
 	rootCmd.AddCommand(NewCmdInstall()) // 安装命令到PATH
 	rootCmd.AddCommand(NewCmdSearch())  // 搜索
 	rootCmd.AddCommand(NewCmdOpen())    // 打开文件或目录
-	rootCmd.AddCommand(NewCmdTime())    // 时间转换
 	rootCmd.AddCommand(NewCmdHttp())    // http服务
-	rootCmd.AddCommand(NewCmdWord())    // 单词格式转换
 	rootCmd.AddCommand(NewCmdUrl())     // 打开网址，文件夹或文件
-	rootCmd.AddCommand(NewCmdSql())     // sql相关
 	rootCmd.AddCommand(NewCmdGo())      // go相关
 }
 
@@ -70,7 +64,7 @@ func initConfig() {
 
 	// use config from home directory!
 	// Find home directory.
-	home, err := homedir.Dir()
+	home, err := os.UserHomeDir()
 	if err != nil {
 		log.Fatalf("get home dir fail: %s", err.Error())
 	}
@@ -108,12 +102,4 @@ func ViperInitSet() {
 	viper.Set(SearchConfigEngine, DefaultSearchEngine)
 	viper.Set(SearchConfigType, DefaultSearchType)
 	viper.Set(SearchConfigCliIsDesc, DefaultCliIsDesc)
-
-	// sql
-	viper.Set(SqlConfigType, DefaultSqlType)
-	viper.Set(SqlConfigHost, DefaultSqlHost)
-	viper.Set(SqlConfigUserName, "")
-	viper.Set(SqlConfigPassword, "")
-	viper.Set(SqlConfigDb, "")
-	viper.Set(SqlConfigCharset, DefaultSqlCharset)
 }

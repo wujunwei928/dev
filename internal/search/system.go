@@ -3,11 +3,10 @@ package search
 import (
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"runtime"
 	"strings"
-
-	"github.com/mitchellh/go-homedir"
 )
 
 // SystemCallCommands 系统调用命令
@@ -22,7 +21,7 @@ var SystemCallCommands = map[string][]string{
 func Open(path string) error {
 	if strings.Index(path, "~") == 0 {
 		// 以~开头时, Find home directory.
-		home, err := homedir.Dir()
+		home, err := os.UserHomeDir()
 		if err != nil {
 			log.Fatalf("get home dir fail: %s", err.Error())
 		}
