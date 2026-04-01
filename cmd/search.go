@@ -36,6 +36,7 @@ const (
 
 func NewCmdSearch() *cobra.Command {
 	var concurrent bool
+	var jsonOutput bool
 	var searchTypeUSage = strings.Join([]string{
 		"检索方式: ",
 		"cli: 终端显示搜索内容",
@@ -84,6 +85,17 @@ func NewCmdSearch() *cobra.Command {
 
 			switch searchType {
 			case SearchTypeCli:
+				// JSON 模式输出
+				if jsonOutput {
+					result := search.KeyValToResultItems(searchMode, searchStr, searchRes)
+					jsonStr, err := result.ToJSON()
+					if err != nil {
+						return fmt.Errorf("JSON 序列化失败: %w", err)
+					}
+					fmt.Println(jsonStr)
+					return nil
+				}
+
 				keyStyle := pterm.NewStyle(pterm.FgLightBlue, pterm.Bold) // 标题cli样式
 				termRenderList := make([]string, 0, len(searchRes))
 				for i, s := range searchRes {
@@ -128,6 +140,7 @@ func NewCmdSearch() *cobra.Command {
 	cmd.Flags().StringP("type", "t", DefaultSearchType, searchTypeUSage)
 	cmd.Flags().BoolP("desc", "", DefaultCliIsDesc, "终端是否倒序展示: 默认倒序, 方便查看")
 	cmd.Flags().BoolVar(&concurrent, "concurrent", false, "并发搜索多个搜索引擎 (Bing, Baidu, Google)")
+	cmd.Flags().BoolVar(&jsonOutput, "json", false, "以 JSON 格式输出搜索结果")
 
 	// flag 和 viper 绑定
 	viper.BindPFlag(SearchConfigEngine, cmd.Flags().Lookup("mode"))
@@ -147,6 +160,7 @@ func getSearchExample() string {
 		{`打开系统默认浏览器检索`, `dev search -m baidu -t browser "k8s"`},
 		{`终端正序显示搜索结果`, `dev search -m bing -t cli --desc=false "golang cobra"`},
 		{`常规搜索引擎site检索`, `dev search -m bing "golang site:cnblogs.com"`},
+		{`JSON 格式输出搜索结果`, `dev search -m bing -t cli --json "golang orm"`},
 	}
 	itemRender, err := pterm.DefaultTable.
 		WithData(pTermTable).
