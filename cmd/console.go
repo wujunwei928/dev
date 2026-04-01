@@ -108,10 +108,11 @@ func NewCmdConsole() *cobra.Command {
 					}
 					println("url解密结果: " + content)
 				case "unicode_encode":
-					content := ""
+					var builder strings.Builder
 					for _, v := range keyWord {
-						content += fmt.Sprintf("\\u%04x", v)
+						builder.WriteString(fmt.Sprintf("\\u%04x", v))
 					}
+					content := builder.String()
 					println("unicode加密结果: " + content)
 				case "unicode_decode":
 					// unicode转换中文需要的格式 "内容" , 注意要传双引号
