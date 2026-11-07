@@ -246,9 +246,19 @@ dev http
 dev http -p 8080
 ```
 
-**启用上传文件功能**
+**启用上传文件功能** (默认关闭, 同名文件默认拒绝覆盖)
 ```bash
 dev http --use_upload
+```
+
+**上传时允许覆盖同名文件**
+```bash
+dev http --use_upload --overwrite
+```
+
+**仅本机访问** (默认监听局域网, 方便跨设备传输文件)
+```bash
+dev http --lan=false
 ```
 
 **主界面**

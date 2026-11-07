@@ -43,7 +43,7 @@ func NewCmdInstall() *cobra.Command {
 			// 命令行参数解析命令名(go run命令运行, 也会生成一个临时可执行文件)
 			copyFromFile, err := filepath.Abs(os.Args[0])
 			if err != nil {
-				pterm.Warning.Printf(err.Error())
+				pterm.Warning.Println(err.Error())
 				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			// window cmd在当前文件夹运行时, 可以不带exe
@@ -52,22 +52,24 @@ func NewCmdInstall() *cobra.Command {
 			}
 			// 需要复制到选择PATH项的文件名
 			copyToFile, err := filepath.Abs(filepath.Join(selectedOption, filepath.Base(copyFromFile)))
-			pterm.Info.Printfln("copy from: " + copyFromFile)
-			pterm.Info.Printfln("copy to: " + copyToFile)
+			pterm.Info.Println("copy from: " + copyFromFile)
+			pterm.Info.Println("copy to: " + copyToFile)
 			if err != nil {
-				pterm.Warning.Printf(err.Error())
+				pterm.Warning.Println(err.Error())
 				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			// 读取当前运行文件内容
+			// #nosec G703 G304 -- 读取的是当前运行的二进制本身(os.Args[0]), 由用户自己启动
 			input, err := os.ReadFile(copyFromFile)
 			if err != nil {
-				pterm.Warning.Printf(err.Error())
+				pterm.Warning.Println(err.Error())
 				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			// 将文件内容写到目标文件
+			// #nosec G703 G306 -- 目标PATH目录由用户交互式选择; 安装可执行文件需要执行位
 			err = os.WriteFile(copyToFile, input, 0744)
 			if err != nil {
-				pterm.Warning.Printf(err.Error())
+				pterm.Warning.Println(err.Error())
 				return fmt.Errorf("install fail, you can manually install dev by copying the binary to path folder")
 			}
 			pterm.Success.Println("install success")

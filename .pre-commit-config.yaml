@@ -8,7 +8,45 @@ repos:
   - id: fix-byte-order-marker
   - id: check-merge-conflict
   - id: check-added-large-files
-- repo: https://github.com/wujunwei928/golang-pre-commit-hooks
-  rev: v0.0.1
+- repo: https://github.com/gitleaks/gitleaks
+  rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # v8.30.1
+  hooks:
+    - id: gitleaks
+      stages: [pre-commit]
+- repo: local
   hooks:
     - id: go-unit-tests
+      name: Go unit tests
+      entry: go test ./...
+      language: system
+      types: [go]
+      pass_filenames: false
+    - id: gosec
+      name: Go security analysis
+      entry: gosec -quiet ./...
+      language: golang
+      additional_dependencies: [github.com/securego/gosec/v2/cmd/gosec@v2.29.0]
+      pass_filenames: false
+      always_run: true
+      stages: [pre-commit]
+    - id: govulncheck
+      name: Go vulnerability scan
+      entry: govulncheck ./...
+      language: golang
+      additional_dependencies: [golang.org/x/vuln/cmd/govulncheck@v1.9.0]
+      pass_filenames: false
+      always_run: true
+      stages: [pre-commit]
+    - id: go-fmt
+      name: gofmt
+      entry: gofmt -l -d
+      language: system
+      types: [go]
+      pass_filenames: true
+    - id: go-imports
+      name: goimports
+      entry: goimports -l -w
+      language: golang
+      additional_dependencies: [golang.org/x/tools/cmd/goimports@v0.52.0]
+      types: [go]
+      pass_filenames: true

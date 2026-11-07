@@ -148,10 +148,10 @@ func NewCmdSearch() *cobra.Command {
 	cmd.Flags().BoolVar(&jsonOutput, "json", false, "以 JSON 格式输出搜索结果")
 
 	// flag 和 viper 绑定
-	viper.BindPFlag(SearchConfigEngine, cmd.Flags().Lookup("mode"))
-	viper.BindPFlag(SearchConfigType, cmd.Flags().Lookup("type"))
-	viper.BindPFlag(SearchConfigCliIsDesc, cmd.Flags().Lookup("desc"))
-	viper.BindPFlag(SearchConfigConcurrent, cmd.Flags().Lookup("concurrent"))
+	_ = viper.BindPFlag(SearchConfigEngine, cmd.Flags().Lookup("mode"))
+	_ = viper.BindPFlag(SearchConfigType, cmd.Flags().Lookup("type"))
+	_ = viper.BindPFlag(SearchConfigCliIsDesc, cmd.Flags().Lookup("desc"))
+	_ = viper.BindPFlag(SearchConfigConcurrent, cmd.Flags().Lookup("concurrent"))
 
 	return cmd
 }

@@ -31,7 +31,7 @@ func showConsoleHelp() {
 	for _, v := range ConsolePromptSuggestList {
 		pTermTable = append(pTermTable, []string{pterm.Green(v.Text), v.Description})
 	}
-	pterm.DefaultTable.WithData(pTermTable).WithHasHeader(true).Render()
+	_ = pterm.DefaultTable.WithData(pTermTable).WithHasHeader(true).Render()
 }
 
 func NewCmdConsole() *cobra.Command {
@@ -86,6 +86,7 @@ func NewCmdConsole() *cobra.Command {
 					if len(consoleArgs) > 2 {
 						runArgs = consoleArgs[2:]
 					}
+					// #nosec G204 -- REPL的">"前缀执行命令是文档化功能, 命令由用户本人输入
 					runCmd := exec.Command(runName, runArgs...)
 					runCmdOutput, runCmdErr := runCmd.CombinedOutput()
 					if runCmdErr != nil {

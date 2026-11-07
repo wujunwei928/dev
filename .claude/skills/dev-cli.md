@@ -24,9 +24,11 @@ description: dev CLI 工具集 - 终端搜索、文件服务和 Go 工具
 快速启动 HTTP 文件服务器，支持上传下载。
 
 - 启动服务：`dev http --port 8899`
-- 启动并启用上传：`dev http --port 8899 --use_upload`
+- 仅本机访问（默认监听局域网方便跨设备传输）：`dev http --lan=false`
+- 启用上传（默认关闭）：`dev http --port 8899 --use_upload`
+- 允许覆盖同名文件：`dev http --use_upload --overwrite`
 - 下载：访问 `http://localhost:8899/static/`
-- 上传：访问 `http://localhost:8899` 使用拖拽上传
+- 上传：启用后访问 `http://localhost:8899` 使用拖拽上传
 
 ## Go 工具
 

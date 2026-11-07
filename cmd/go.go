@@ -102,8 +102,10 @@ func (c GoSubCmd) newSearchCmd() *cobra.Command {
 			fmt.Println("检索到的包:")
 			for _, pkg := range searchPkgList {
 				if isInstall {
+					// #nosec G204 -- pkg 来自代码内硬编码的常用包列表
 					command := exec.Command("go", "get", pkg)
 					if isUpdate {
+						// #nosec G204 -- pkg 来自代码内硬编码的常用包列表
 						command = exec.Command("go", "get", "-u", pkg)
 					}
 					installOutput, err := command.CombinedOutput()
@@ -150,8 +152,12 @@ func (c GoSubCmd) NewCmdBuild() *cobra.Command {
 
 			osList := []string{"linux", "windows", "darwin"}
 			archList := []string{"amd64", "arm64"}
-			os.Mkdir(buildOutputPath, 0744)
-			os.Chdir(buildOutputPath)
+			if err := os.Mkdir(buildOutputPath, 0750); err != nil && !os.IsExist(err) {
+				return fmt.Errorf("create build output dir fail: %w", err)
+			}
+			if err := os.Chdir(buildOutputPath); err != nil {
+				return fmt.Errorf("enter build output dir fail: %w", err)
+			}
 			for _, goOs := range osList {
 				for _, goArch := range archList {
 					outputName := buildOutputName
@@ -159,10 +165,13 @@ func (c GoSubCmd) NewCmdBuild() *cobra.Command {
 						outputName += ".exe"
 					}
 
-					os.Setenv("CGO_ENABLED", "0")
-					os.Setenv("GOOS", goOs)
-					os.Setenv("GOARCH", goArch)
-					os.MkdirAll(filepath.Join(goOs, goArch), 0744)
+					_ = os.Setenv("CGO_ENABLED", "0")
+					_ = os.Setenv("GOOS", goOs)
+					_ = os.Setenv("GOARCH", goArch)
+					if err := os.MkdirAll(filepath.Join(goOs, goArch), 0750); err != nil {
+						return fmt.Errorf("create arch output dir fail: %w", err)
+					}
+					// #nosec G204 -- 本地交叉编译工具, 目标文件与源文件均来自用户自身输入
 					command := exec.Command("go", "build", "-o", path.Join(goOs, goArch, outputName), fileName)
 					fmt.Println(command)
 					_, err = command.CombinedOutput()
