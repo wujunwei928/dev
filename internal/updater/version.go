@@ -4,6 +4,7 @@ package updater
 import (
 	"regexp"
 	"runtime/debug"
+	"strconv"
 	"strings"
 )
 
@@ -76,6 +77,110 @@ func isSemVer(s string) bool {
 		return false
 	}
 	return isNumeric(parts[1]) && isNumeric(parts[2])
+}
+
+// compareVersions 按 semver 次序比较 a 与 b: a<b 返回 -1, a>b 返回 1, 相等返回 0。
+// 接受 vX.Y.Z 与可选 -prerelease 后缀 (v 前缀可选); 任一方不可解析 (如 devel 形态) 时 ok=false,
+// 调用方按「无法判定新旧」处理。
+// 预发布段按 semver 规则比较: 正式版 > 预发布, 段内数字按数值、标识符按字典序。
+func compareVersions(a, b string) (cmp int, ok bool) {
+	va, oka := parseSemver(a)
+	vb, okb := parseSemver(b)
+	if !oka || !okb {
+		return 0, false
+	}
+	if va.major != vb.major {
+		return sign(va.major - vb.major), true
+	}
+	if va.minor != vb.minor {
+		return sign(va.minor - vb.minor), true
+	}
+	if va.patch != vb.patch {
+		return sign(va.patch - vb.patch), true
+	}
+	switch {
+	case va.prerelease == vb.prerelease:
+		return 0, true
+	case va.prerelease == "":
+		return 1, true
+	case vb.prerelease == "":
+		return -1, true
+	default:
+		return comparePrerelease(va.prerelease, vb.prerelease), true
+	}
+}
+
+// semver compareVersions 所需的解析结果
+type semver struct {
+	major, minor, patch int
+	prerelease          string // 不含前导 -, 空串表示正式版
+}
+
+// parseSemver 解析 vX.Y.Z(-prerelease) 形态版本号, 容忍 build metadata (+...) 后缀;
+// 伪版本 (vX.0.0-<ts>-<hash>) 与 tag 后接的预发布一并落入 prerelease 处理
+func parseSemver(s string) (semver, bool) {
+	s = normalizeVersion(s)
+	if i := strings.IndexByte(s, '+'); i >= 0 {
+		s = s[:i]
+	}
+	var v semver
+	if i := strings.IndexByte(s, '-'); i >= 0 {
+		v.prerelease = s[i+1:]
+		s = s[:i]
+	}
+	parts := strings.Split(s, ".")
+	if len(parts) != 3 || !isNumeric(parts[0]) || !isNumeric(parts[1]) || !isNumeric(parts[2]) {
+		return semver{}, false
+	}
+	nums := make([]int, 3)
+	for i, p := range parts {
+		n, err := strconv.Atoi(p)
+		if err != nil {
+			return semver{}, false
+		}
+		nums[i] = n
+	}
+	v.major, v.minor, v.patch = nums[0], nums[1], nums[2]
+	return v, true
+}
+
+// comparePrerelease 按 semver 规则比较预发布段: 以 . 分段, 段数少者小;
+// 同位置均为纯数字按数值比较, 数字段小于字母段, 其余按字典序
+func comparePrerelease(a, b string) int {
+	as := strings.Split(a, ".")
+	bs := strings.Split(b, ".")
+	for i := 0; i < len(as) && i < len(bs); i++ {
+		xNum, yNum := isNumeric(as[i]), isNumeric(bs[i])
+		switch {
+		case xNum && yNum:
+			x, _ := strconv.Atoi(as[i])
+			y, _ := strconv.Atoi(bs[i])
+			if x != y {
+				return sign(x - y)
+			}
+		case xNum != yNum:
+			if xNum {
+				return -1
+			}
+			return 1
+		default:
+			if c := strings.Compare(as[i], bs[i]); c != 0 {
+				return c
+			}
+		}
+	}
+	return sign(len(as) - len(bs))
+}
+
+// sign 返回 n 的符号
+func sign(n int) int {
+	switch {
+	case n < 0:
+		return -1
+	case n > 0:
+		return 1
+	}
+	return 0
 }
 
 // isNumeric 报告 s 是否为非空纯十进制数字串。

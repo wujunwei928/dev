@@ -49,14 +49,35 @@ func newReleaseServer(t *testing.T, tag string) *httptest.Server {
 	return ts
 }
 
-// 裸 dev update 是占位提示, 不报错
-func TestUpdateWithoutCheckPrintsPlaceholder(t *testing.T) {
+// 裸 dev update (release 构建) 已是最新时提示且不下载替换
+func TestUpdateBareReleaseAlreadyUpToDate(t *testing.T) {
+	ts := newReleaseServer(t, "v0.2.1")
+	setAPIBase(t, ts.URL)
+	Version = "v0.2.1"
+	t.Cleanup(func() { Version = "" })
+
 	out, err := runRoot(t, "update")
 	if err != nil {
-		t.Fatalf("bare update should not fail, got: %v", err)
+		t.Fatalf("bare update should not fail when up to date, got: %v", err)
 	}
-	if !strings.Contains(out, "--check") {
-		t.Errorf("placeholder should point to --check, got: %q", out)
+	if !strings.Contains(out, "already up to date") {
+		t.Errorf("output should say already up to date, got: %q", out)
+	}
+}
+
+// 本地构建裸更新先给出警告 (随后 API 失败则报错, 证明警告先于更新动作输出)
+func TestUpdateBareLocalBuildWarnsAndFailsOnAPIDown(t *testing.T) {
+	ts := newReleaseServer(t, "v0.2.1")
+	ts.Close() // 先关闭制造网络失败
+	setAPIBase(t, ts.URL)
+	// Version 保持空串, 测试二进制经 buildinfo 解析为本地构建
+
+	out, err := runRoot(t, "update")
+	if err == nil {
+		t.Fatal("bare update should fail when API is unreachable, got nil")
+	}
+	if !strings.Contains(out, "本地构建") {
+		t.Errorf("output should warn about local build, got: %q", out)
 	}
 }
 

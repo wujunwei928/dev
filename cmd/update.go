@@ -16,34 +16,63 @@ const (
 
 func NewCmdUpdate() *cobra.Command {
 	var checkOnly bool
+	var targetVersion string
 
 	cmd := &cobra.Command{
 		Use:   "update",
 		Short: "检查并安装更新",
-		Long:  "检查并安装更新, --check 只查询最新版本不安装",
+		Long:  "检查并安装更新, --check 只查询最新版本不安装, --version <ver> 安装指定版本 (可降级回滚)",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if !checkOnly {
-				// 安装动作由后续版本提供 (#8/#9), 本版仅立起命令骨架
-				fmt.Fprintln(cmd.OutOrStdout(), "自动更新尚未提供, 当前仅支持 --check 查询最新版本")
+			vi := updater.CurrentVersion(Version)
+			apiBase := viper.GetString(UpdateConfigAPIBase)
+			out := cmd.OutOrStdout()
+
+			if checkOnly {
+				res, err := updater.Check(vi, apiBase)
+				if err != nil {
+					return err
+				}
+				fmt.Fprintf(out, "当前版本: %s\n", res.Current)
+				fmt.Fprintf(out, "最新版本: %s\n", res.Latest)
+				if res.UpToDate {
+					fmt.Fprintln(out, "已是最新版本 (already up to date)")
+				} else {
+					fmt.Fprintf(out, "发现新版本 %s 可用\n", res.Latest)
+				}
 				return nil
 			}
 
-			res, err := updater.Check(updater.CurrentVersion(Version), viper.GetString(UpdateConfigAPIBase))
+			// go install 构建的委托升级由后续版本提供 (#9), 当前回落为手动提示
+			if vi.Method == updater.MethodGoInstall {
+				fmt.Fprintln(out, "go install 构建的自动更新委托尚未提供, 请手动执行: go install github.com/wujunwei928/dev@latest")
+				fmt.Fprintln(out, "可先运行 dev update --check 查看最新版本")
+				return nil
+			}
+			if vi.Method == updater.MethodLocal {
+				fmt.Fprintln(out, "警告: 当前为本地构建版本, 更新将替换为 GitHub Releases 的官方发布版")
+			}
+
+			res, err := updater.Update(updater.UpdateOptions{
+				Current: vi,
+				Target:  targetVersion,
+				APIBase: apiBase,
+			})
 			if err != nil {
 				return err
 			}
-			out := cmd.OutOrStdout()
-			fmt.Fprintf(out, "当前版本: %s\n", res.Current)
-			fmt.Fprintf(out, "最新版本: %s\n", res.Latest)
 			if res.UpToDate {
 				fmt.Fprintln(out, "已是最新版本 (already up to date)")
-			} else {
-				fmt.Fprintf(out, "发现新版本 %s 可用\n", res.Latest)
+				return nil
+			}
+			fmt.Fprintf(out, "已更新到 %s (原版本 %s)\n", res.To, res.From)
+			if !res.ChecksumVerified {
+				fmt.Fprintln(out, "注意: 该版本未提供 checksums.txt, 未经 sha256 校验")
 			}
 			return nil
 		},
 	}
 
 	cmd.Flags().BoolVar(&checkOnly, "check", false, "只查询最新版本, 不安装更新")
+	cmd.Flags().StringVar(&targetVersion, "version", "", "安装指定版本 (如 v0.2.0), 可用于降级回滚")
 	return cmd
 }
