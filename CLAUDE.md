@@ -126,3 +126,17 @@ The project uses pre-commit hooks for code quality:
 - Byte order marker checks
 - Go unit tests
 - Large file detection
+
+## Agent skills
+
+### Issue tracker
+
+Issues 追踪于 GitHub Issues（wujunwei928/dev），全部操作走 `gh` CLI。见 `docs/agents/issue-tracker.md`。
+
+### Triage labels
+
+采用默认五标签：`needs-triage` / `needs-info` / `ready-for-agent` / `ready-for-human` / `wontfix`。见 `docs/agents/triage-labels.md`。
+
+### Domain docs
+
+单上下文布局：根 `GLOSSARY.md`（惰性创建）+ `docs/adr/`。见 `docs/agents/domain.md`。
