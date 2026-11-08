@@ -56,6 +56,7 @@ docker run -d -p 8899:8899 --name dev_test dev
   - `timer/` - Time and timestamp utilities
   - `word/` - Word case conversion utilities
   - `tools/` - General utility functions
+  - `updater/` - Self-update support: version resolution, update check, release download with sha256 verify and atomic swap, go install delegation
 
 ### Key Components
 
