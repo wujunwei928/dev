@@ -2,6 +2,7 @@
 package updater
 
 import (
+	"regexp"
 	"runtime/debug"
 	"strings"
 )
@@ -33,7 +34,7 @@ func ResolveVersion(ldflagsVersion string, bi BuildInfo) VersionInfo {
 	if ldflagsVersion != "" {
 		return VersionInfo{Method: MethodRelease, Version: ldflagsVersion}
 	}
-	if isSemVer(bi.MainVersion) {
+	if isSemVer(bi.MainVersion) && !isPseudoVersion(bi.MainVersion) {
 		return VersionInfo{Method: MethodGoInstall, Version: bi.MainVersion}
 	}
 	if rev := shortCommit(bi.VCSRevision); rev != "" {
@@ -48,6 +49,17 @@ func shortCommit(rev string) string {
 		return rev[:7]
 	}
 	return rev
+}
+
+// pseudoVersionRe 匹配 go 命令由 VCS 状态推导的伪版本, 三种形态共用同一 <14位UTC时间戳>-<commit hash> 后缀:
+// vX.0.0-<ts>-<hash> / vX.Y.Z-<pre>.0.<ts>-<hash> / vX.Y[.Z]-N.0.<ts>-<hash>
+var pseudoVersionRe = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+-([0-9A-Za-z]+\.)*[0-9]{14}-[0-9a-f]{12,}$`)
+
+// isPseudoVersion 报告 s 是否为 go 命令生成的伪版本。
+// 伪版本表示构建时由 VCS 状态推导 (含本地 go build 与 go install @branch),
+// 不是 go install 安装的发布版本, 故不计入 go install 探测。
+func isPseudoVersion(s string) bool {
+	return pseudoVersionRe.MatchString(s)
 }
 
 // isSemVer 报告 s 是否为合法模块版本号 vX.Y.Z (可带 -prerelease)。
