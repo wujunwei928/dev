@@ -52,6 +52,7 @@ func init() {
 	rootCmd.AddCommand(NewCmdHttp())    // http服务
 	rootCmd.AddCommand(NewCmdUrl())     // 打开网址，文件夹或文件
 	rootCmd.AddCommand(NewCmdGo())      // go相关
+	rootCmd.AddCommand(NewCmdUpdate())  // 更新检查与升级
 }
 
 func initConfig() {
