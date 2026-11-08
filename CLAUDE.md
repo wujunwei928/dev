@@ -117,7 +117,7 @@ The project uses Go's built-in testing framework. Tests are located alongside th
 
 ## Version Management
 
-Version is defined in `cmd/root.go` as a constant. When building releases, update this version number accordingly.
+Version is resolved at startup via `internal/updater` with three-level priority: ldflags injection (`-ldflags "-X github.com/wujunwei928/dev/cmd.Version=X.Y.Z"`) > `debug.ReadBuildInfo` main module version (go install builds) > `devel+<short commit>` (local builds). Do not hardcode version constants in `cmd/root.go`.
 
 ## Pre-commit Hooks
 
