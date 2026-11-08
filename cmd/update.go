@@ -42,12 +42,6 @@ func NewCmdUpdate() *cobra.Command {
 				return nil
 			}
 
-			// go install 构建的委托升级由后续版本提供 (#9), 当前回落为手动提示
-			if vi.Method == updater.MethodGoInstall {
-				fmt.Fprintln(out, "go install 构建的自动更新委托尚未提供, 请手动执行: go install github.com/wujunwei928/dev@latest")
-				fmt.Fprintln(out, "可先运行 dev update --check 查看最新版本")
-				return nil
-			}
 			if vi.Method == updater.MethodLocal {
 				fmt.Fprintln(out, "警告: 当前为本地构建版本, 更新将替换为 GitHub Releases 的官方发布版")
 			}
@@ -64,8 +58,11 @@ func NewCmdUpdate() *cobra.Command {
 				fmt.Fprintln(out, "已是最新版本 (already up to date)")
 				return nil
 			}
+			if res.GoMissingFallback {
+				fmt.Fprintln(out, "未找到 go 命令, 已回退到 GitHub Releases 下载替换路径")
+			}
 			fmt.Fprintf(out, "已更新到 %s (原版本 %s)\n", res.To, res.From)
-			if !res.ChecksumVerified {
+			if !res.ChecksumVerified && res.Method != updater.MethodGoInstall {
 				fmt.Fprintln(out, "注意: 该版本未提供 checksums.txt, 未经 sha256 校验")
 			}
 			return nil

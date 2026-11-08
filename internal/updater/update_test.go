@@ -502,15 +502,5 @@ func TestUpdateAPIFailureKeepsOldBinary(t *testing.T) {
 	assertInstallDirClean(t, dir, execPath)
 }
 
-// go install 构建不走下载路径 (由 #9 的 go install 委托负责)
-func TestUpdateRefusesGoInstallMethod(t *testing.T) {
-	_, err := Update(UpdateOptions{
-		Current: VersionInfo{Method: MethodGoInstall, Version: "v0.2.0"},
-	})
-	if err == nil {
-		t.Fatal("Update should refuse go install builds, got nil")
-	}
-	if !strings.Contains(err.Error(), "go install") {
-		t.Errorf("error should point to go install, got: %v", err)
-	}
-}
+// go install 构建的委托路径与回退行为见 goinstall_test.go (#9): Update 按安装方式分发,
+// 下载替换路径经分发进入, 不再拒绝 go install 构建

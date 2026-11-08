@@ -1,7 +1,6 @@
 package updater
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,7 +16,7 @@ type UpdateOptions struct {
 	Target string
 	// APIBase GitHub API base, 空串使用默认 https://api.github.com
 	APIBase string
-	// ExecPath 待替换的可执行文件路径, 空串取 os.Executable() 自身 (测试与特殊布局可覆盖)
+	// ExecPath 待替换/待实测的可执行文件路径, 空串取 os.Executable() 自身 (测试与特殊布局可覆盖)
 	ExecPath string
 }
 
@@ -27,28 +26,44 @@ type UpdateResult struct {
 	To               string // 安装后的版本 tag
 	Method           Method // 实际走的更新通道
 	UpToDate         bool   // 未做任何变更, 当前已是最新
-	ChecksumVerified bool   // 本次安装是否经过 checksums.txt sha256 校验 (历史 Release 未提供该文件时为 false)
+	ChecksumVerified bool   // 本次安装是否经过 checksums.txt sha256 校验 (历史 Release 未提供该文件或 go install 路径时为 false)
+	// GoMissingFallback go install 构建委托时因 go 不在 PATH 而回退下载替换路径时为真
+	GoMissingFallback bool
 }
 
-// Update 执行 release/本地构建用户的端到端自更新:
-// 查 Releases API 选平台产物 → 下载 → sha256 校验 → 解出二进制 → 冒烟测试 → rename 原子交换。
+// Update 执行端到端自更新, 按安装方式分发:
+// - go install 构建: 委托 go install <module>@<ver>, go 不在 PATH 时回退下载替换路径
+// - release/本地构建: 查 Releases API 下载对应平台产物做替换
 // 任一步失败旧版原位不动并清理临时产物; 已是最新时不下载直接返回 UpToDate。
-// go install 构建不走本路径 (由 go install 委托负责)
 func Update(opts UpdateOptions) (UpdateResult, error) {
 	if opts.Current.Method == MethodGoInstall {
-		return UpdateResult{}, errors.New("go install 构建请使用 go install 命令升级, 不走下载替换路径")
+		return updateGoInstall(opts)
 	}
+	return updateDownload(opts)
+}
 
-	execPath := opts.ExecPath
+// selfExecPath 解析待操作的可执行文件路径: 显式指定优先, 否则取 os.Executable() 自身
+func selfExecPath(explicit string) (string, error) {
+	execPath := explicit
 	if execPath == "" {
 		p, err := os.Executable()
 		if err != nil {
-			return UpdateResult{}, fmt.Errorf("定位自身可执行文件失败: %w", err)
+			return "", fmt.Errorf("定位自身可执行文件失败: %w", err)
 		}
 		execPath = p
 	}
 	if p, err := filepath.Abs(execPath); err == nil {
 		execPath = p
+	}
+	return execPath, nil
+}
+
+// updateDownload release/本地构建用户的下载替换路径:
+// 查 Releases API 选平台产物 → 下载 → sha256 校验 → 解出二进制 → 冒烟测试 → rename 原子交换
+func updateDownload(opts UpdateOptions) (UpdateResult, error) {
+	execPath, err := selfExecPath(opts.ExecPath)
+	if err != nil {
+		return UpdateResult{}, err
 	}
 
 	// 上次更新遗留的 .old 备份清理 (Windows 上运行中的旧映像无法删除, 顺延到本次启动)
