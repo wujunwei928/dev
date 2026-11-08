@@ -15,6 +15,9 @@ build_output
 # Dependency directories (remove the comment below to include it)
 # vendor/
 
+# goreleaser 构建产物
+dist/
+
 # Agent working artifacts
 .v2c/
 .video_agent/

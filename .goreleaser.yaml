@@ -1,0 +1,34 @@
+# 本地手动发布流水线: 打 tag 后运行 `goreleaser release` 产出 6 平台归档 + checksums.txt
+# 资产命名 dev_<ver>_<os>_<arch>.zip|.tar.gz 与 internal/updater 的 pickAsset 选资产逻辑一致
+# (ver 为 tag 去掉 v 前缀), 请勿单独改动
+version: 2
+
+project_name: dev
+
+builds:
+  - binary: dev
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    # 注入 cmd.Version, 路径与 cmd/root.go 的版本变量一致, 供 dev --version 与 update 探测
+    ldflags:
+      - -s -w -X github.com/wujunwei928/dev/cmd.Version={{.Version}}
+
+archives:
+  # 命名对应 updater: dev_<ver>_<os>_<arch>, Windows 用 zip 其余 tar.gz
+  - name_template: dev_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  # 固定为 checksums.txt, updater 的严格 sha256 校验按该文件名查找
+  name_template: checksums.txt
+  algorithm: sha256
