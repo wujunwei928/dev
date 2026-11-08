@@ -22,11 +22,10 @@ type UpdateOptions struct {
 
 // UpdateResult 更新执行结果
 type UpdateResult struct {
-	From             string // 原版本展示串
-	To               string // 安装后的版本 tag
-	Method           Method // 实际走的更新通道
-	UpToDate         bool   // 未做任何变更, 当前已是最新
-	ChecksumVerified bool   // 本次安装是否经过 checksums.txt sha256 校验 (历史 Release 未提供该文件或 go install 路径时为 false)
+	From     string // 原版本展示串
+	To       string // 安装后的版本 tag
+	Method   Method // 实际走的更新通道
+	UpToDate bool   // 未做任何变更, 当前已是最新
 	// GoMissingFallback go install 构建委托时因 go 不在 PATH 而回退下载替换路径时为真
 	GoMissingFallback bool
 }
@@ -36,10 +35,19 @@ type UpdateResult struct {
 // - release/本地构建: 查 Releases API 下载对应平台产物做替换
 // 任一步失败旧版原位不动并清理临时产物; 已是最新时不下载直接返回 UpToDate。
 func Update(opts UpdateOptions) (UpdateResult, error) {
-	if opts.Current.Method == MethodGoInstall {
-		return updateGoInstall(opts)
+	execPath, err := selfExecPath(opts.ExecPath)
+	if err != nil {
+		return UpdateResult{}, err
 	}
-	return updateDownload(opts)
+
+	// 上次更新遗留的 .old 备份清理 (Windows 上运行中的旧映像无法删除, 顺延到本次启动)。
+	// 放在分发层使 go install 委托路径同样清理遗留
+	removeStaleOldBinary(execPath)
+
+	if opts.Current.Method == MethodGoInstall {
+		return updateGoInstall(opts, execPath)
+	}
+	return updateDownload(opts, execPath)
 }
 
 // selfExecPath 解析待操作的可执行文件路径: 显式指定优先, 否则取 os.Executable() 自身
@@ -59,16 +67,9 @@ func selfExecPath(explicit string) (string, error) {
 }
 
 // updateDownload release/本地构建用户的下载替换路径:
-// 查 Releases API 选平台产物 → 下载 → sha256 校验 → 解出二进制 → 冒烟测试 → rename 原子交换
-func updateDownload(opts UpdateOptions) (UpdateResult, error) {
-	execPath, err := selfExecPath(opts.ExecPath)
-	if err != nil {
-		return UpdateResult{}, err
-	}
-
-	// 上次更新遗留的 .old 备份清理 (Windows 上运行中的旧映像无法删除, 顺延到本次启动)
-	removeStaleOldBinary(execPath)
-
+// 查 Releases API 选平台产物 → 下载 → sha256 校验 → 解出二进制 → 冒烟测试 → rename 原子交换。
+// sha256 校验是安装的硬性前提: Release 缺 checksums.txt 时直接拒绝, 旧版原位不动
+func updateDownload(opts UpdateOptions, execPath string) (UpdateResult, error) {
 	// 1. 查询目标 Release
 	rel, err := fetchRelease(opts.APIBase, opts.Target)
 	if err != nil {
@@ -93,6 +94,9 @@ func updateDownload(opts UpdateOptions) (UpdateResult, error) {
 		return UpdateResult{}, err
 	}
 	checksumsAsset, hasChecksums := findChecksumsAsset(rel)
+	if !hasChecksums {
+		return UpdateResult{}, fmt.Errorf("版本 %s 未提供 checksums.txt, 无法校验产物完整性, 已拒绝安装 (旧版保持不变)", rel.TagName)
+	}
 
 	// 4. 下载到系统临时目录并校验 sha256
 	tmpDir, err := os.MkdirTemp("", "dev-update-")
@@ -105,16 +109,12 @@ func updateDownload(opts UpdateOptions) (UpdateResult, error) {
 	if err := downloadFile(archive.BrowserDownloadURL, archivePath); err != nil {
 		return UpdateResult{}, err
 	}
-	checksumVerified := false
-	if hasChecksums {
-		checksumsPath := filepath.Join(tmpDir, checksumsAsset.Name)
-		if err := downloadFile(checksumsAsset.BrowserDownloadURL, checksumsPath); err != nil {
-			return UpdateResult{}, err
-		}
-		if err := verifyChecksum(archivePath, checksumsPath, archive.Name); err != nil {
-			return UpdateResult{}, err
-		}
-		checksumVerified = true
+	checksumsPath := filepath.Join(tmpDir, checksumsAsset.Name)
+	if err := downloadFile(checksumsAsset.BrowserDownloadURL, checksumsPath); err != nil {
+		return UpdateResult{}, err
+	}
+	if err := verifyChecksum(archivePath, checksumsPath, archive.Name); err != nil {
+		return UpdateResult{}, err
 	}
 
 	// 5. 解出二进制, 暂存目录与目标同卷以保证 rename 交换
@@ -139,9 +139,8 @@ func updateDownload(opts UpdateOptions) (UpdateResult, error) {
 	}
 
 	return UpdateResult{
-		From:             opts.Current.Version,
-		To:               rel.TagName,
-		Method:           opts.Current.Method,
-		ChecksumVerified: checksumVerified,
+		From:   opts.Current.Version,
+		To:     rel.TagName,
+		Method: opts.Current.Method,
 	}, nil
 }

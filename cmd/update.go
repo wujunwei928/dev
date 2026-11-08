@@ -62,9 +62,6 @@ func NewCmdUpdate() *cobra.Command {
 				fmt.Fprintln(out, "未找到 go 命令, 已回退到 GitHub Releases 下载替换路径")
 			}
 			fmt.Fprintf(out, "已更新到 %s (原版本 %s)\n", res.To, res.From)
-			if !res.ChecksumVerified && res.Method != updater.MethodGoInstall {
-				fmt.Fprintln(out, "注意: 该版本未提供 checksums.txt, 未经 sha256 校验")
-			}
 			return nil
 		},
 	}

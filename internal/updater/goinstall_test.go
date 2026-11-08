@@ -300,3 +300,31 @@ func TestUpdateGoInstallFallsBackToDownloadWhenGoMissing(t *testing.T) {
 		t.Errorf("downloaded assets = %v, want archive + checksums.txt", site.dlHits)
 	}
 }
+
+// .old 遗留清理在 Update 分发层生效: go install 委托路径启动时同样清理
+func TestUpdateGoInstallCleansStaleOldBinary(t *testing.T) {
+	withRecordingGoShim(t, "github.com/wujunwei928/dev v0.3.0", 0)
+	t.Setenv(fakeVersionEnv, "v0.3.0")
+
+	dir := t.TempDir()
+	execPath := filepath.Join(dir, binaryName())
+	copySelf(t, execPath)
+	stale := filepath.Join(dir, binaryName()+".old")
+	if err := os.WriteFile(stale, []byte("stale-leftover"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Update(UpdateOptions{
+		Current:  VersionInfo{Method: MethodGoInstall, Version: "v0.2.0"},
+		APIBase:  deadDownloadServer(t),
+		ExecPath: execPath,
+	}); err != nil {
+		t.Fatalf("Update failed: %v", err)
+	}
+	if _, err := os.Stat(stale); !os.IsNotExist(err) {
+		t.Errorf("stale .old should be cleaned on go install path, stat err: %v", err)
+	}
+	if _, err := os.Stat(execPath); err != nil {
+		t.Errorf("active binary should stay in place, stat err: %v", err)
+	}
+}

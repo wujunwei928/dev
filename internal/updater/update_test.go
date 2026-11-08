@@ -180,9 +180,6 @@ func TestUpdateEndToEnd(t *testing.T) {
 	if res.UpToDate {
 		t.Error("UpToDate = true, want false")
 	}
-	if !res.ChecksumVerified {
-		t.Error("ChecksumVerified = false, want true (checksums.txt 已提供)")
-	}
 
 	// 交换完成: 原位是新二进制内容
 	if got, err := os.ReadFile(execPath); err != nil || !bytes.Equal(got, selfBytes(t)) {
@@ -198,8 +195,9 @@ func TestUpdateEndToEnd(t *testing.T) {
 	}
 }
 
-// 历史 Release 形态端到端: 连字符命名, tag 无 v, 无 checksums.txt, windows 也是 tar.gz
-func TestUpdateEndToEndLegacyRelease(t *testing.T) {
+// 历史 Release 形态 (连字符命名, tag 无 v, 无 checksums.txt) 缺校验文件时硬失败:
+// sha256 校验是安装的硬性前提, 缺失即拒绝, 旧版原位不动, 不做无谓下载
+func TestUpdateLegacyReleaseWithoutChecksumsHardFails(t *testing.T) {
 	tag := "0.1.3"
 	archName := fmt.Sprintf("dev-%s-%s-%s.tar.gz", tag, runtime.GOOS, runtime.GOARCH)
 	archBytes := buildSelfArchive(t, archName)
@@ -208,26 +206,27 @@ func TestUpdateEndToEndLegacyRelease(t *testing.T) {
 		map[string][]byte{archName: archBytes},
 	)
 	dir, execPath := installDir(t)
-	t.Setenv(fakeVersionEnv, "0.1.3")
 
-	res, err := Update(UpdateOptions{
+	_, err := Update(UpdateOptions{
 		Current:  VersionInfo{Method: MethodRelease, Version: "0.1.2"},
 		APIBase:  site.baseURL,
 		ExecPath: execPath,
 	})
-	if err != nil {
-		t.Fatalf("Update failed: %v", err)
+	if err == nil {
+		t.Fatal("Update should refuse install when release lacks checksums.txt, got nil")
 	}
-	if res.To != "0.1.3" {
-		t.Errorf("To = %q, want 0.1.3", res.To)
-	}
-	if res.ChecksumVerified {
-		t.Error("ChecksumVerified = true, want false (历史 Release 无 checksums.txt)")
+	if !strings.Contains(err.Error(), "checksums.txt") {
+		t.Errorf("error should name the missing checksums.txt, got: %v", err)
 	}
 	if got, err := os.ReadFile(execPath); err != nil || !bytes.Equal(got, selfBytes(t)) {
-		t.Errorf("exec binary not replaced (err=%v)", err)
+		t.Errorf("old binary must stay untouched (err=%v)", err)
 	}
 	assertInstallDirClean(t, dir, execPath)
+	site.mu.Lock()
+	defer site.mu.Unlock()
+	if len(site.dlHits) != 0 {
+		t.Errorf("assets downloaded = %v, want none (缺校验文件应在下载前拒绝)", site.dlHits)
+	}
 }
 
 // 已是最新时不再下载, 原位不动

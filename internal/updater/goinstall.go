@@ -14,12 +14,7 @@ import (
 // 再委托 go install <module>@latest (显式 --version 时 @vX.Y.Z) 完成升级,
 // 完成后实测自身 --version 验证版本真的变了 (不信子进程退出码);
 // go 不在 PATH 时回退到下载替换路径。
-func updateGoInstall(opts UpdateOptions) (UpdateResult, error) {
-	execPath, err := selfExecPath(opts.ExecPath)
-	if err != nil {
-		return UpdateResult{}, err
-	}
-
+func updateGoInstall(opts UpdateOptions, execPath string) (UpdateResult, error) {
 	// 目标版本: 显式 --version 按请求安装 (兼做降级回滚); 裸更新先查最新版做 already-up-to-date 判定
 	var want string
 	if opts.Target != "" {
@@ -28,7 +23,7 @@ func updateGoInstall(opts UpdateOptions) (UpdateResult, error) {
 		chk, err := Check(opts.Current, "")
 		if err != nil {
 			if isGoMissingErr(err) {
-				return fallbackToDownload(opts)
+				return fallbackToDownload(opts, execPath)
 			}
 			return UpdateResult{}, err
 		}
@@ -48,7 +43,7 @@ func updateGoInstall(opts UpdateOptions) (UpdateResult, error) {
 	}
 	if err := runGoInstall(ref); err != nil {
 		if isGoMissingErr(err) {
-			return fallbackToDownload(opts)
+			return fallbackToDownload(opts, execPath)
 		}
 		return UpdateResult{}, err
 	}
@@ -108,8 +103,8 @@ func measuredVersion(execPath string) (string, error) {
 }
 
 // fallbackToDownload go 不可用时回退下载替换路径, 结果标注回退事实
-func fallbackToDownload(opts UpdateOptions) (UpdateResult, error) {
-	res, err := updateDownload(opts)
+func fallbackToDownload(opts UpdateOptions, execPath string) (UpdateResult, error) {
+	res, err := updateDownload(opts, execPath)
 	if err != nil {
 		return UpdateResult{}, err
 	}
