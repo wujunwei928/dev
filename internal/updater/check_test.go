@@ -130,7 +130,7 @@ func TestCheckAPIFailureReturnsClearError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Check should return error on API failure, got nil")
 	}
-	if !strings.Contains(err.Error(), "查询最新版本失败") {
+	if !strings.Contains(err.Error(), "查询版本") {
 		t.Errorf("error should state the query failed clearly, got: %v", err)
 	}
 }
@@ -145,7 +145,7 @@ func TestCheckAPIUnreachableReturnsClearError(t *testing.T) {
 	if err == nil {
 		t.Fatal("Check should return error when server is unreachable, got nil")
 	}
-	if !strings.Contains(err.Error(), "查询最新版本失败") {
+	if !strings.Contains(err.Error(), "查询版本") {
 		t.Errorf("error should state the query failed clearly, got: %v", err)
 	}
 }

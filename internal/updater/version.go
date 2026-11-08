@@ -63,20 +63,12 @@ func isPseudoVersion(s string) bool {
 	return pseudoVersionRe.MatchString(s)
 }
 
-// isSemVer 报告 s 是否为合法模块版本号 vX.Y.Z (可带 -prerelease)。
-// 本地构建的主模块版本为 "(devel)" 或空串, 须据此与 go install 构建区分。
+// isSemVer 报告 s 是否为合法 semver 版本号 (v 前缀可选, 可带 -prerelease / +build 后缀)。
+// 用于从主模块版本识别 go install 构建; 本地构建的主模块版本为 "(devel)" 或空串, 据此区分。
+// go 模块版本恒带 v 前缀且不含 build metadata, parseSemver 的额外宽容不影响安装方式判定
 func isSemVer(s string) bool {
-	if !strings.HasPrefix(s, "v") {
-		return false
-	}
-	if i := strings.IndexByte(s, '-'); i >= 0 {
-		s = s[:i] // 去掉可选的 -prerelease
-	}
-	parts := strings.Split(s, ".")
-	if len(parts) != 3 || !isNumeric(parts[0][1:]) {
-		return false
-	}
-	return isNumeric(parts[1]) && isNumeric(parts[2])
+	_, ok := parseSemver(s)
+	return ok
 }
 
 // compareVersions 按 semver 次序比较 a 与 b: a<b 返回 -1, a>b 返回 1, 相等返回 0。

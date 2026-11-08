@@ -131,7 +131,7 @@ func TestUpdateCheckFailureReturnsClearError(t *testing.T) {
 	if err == nil {
 		t.Fatal("update --check should fail when API is unreachable, got nil")
 	}
-	if !strings.Contains(err.Error(), "查询最新版本失败") {
+	if !strings.Contains(err.Error(), "查询版本") {
 		t.Errorf("error should state the query failed clearly, got: %v", err)
 	}
 

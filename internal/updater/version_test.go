@@ -72,11 +72,14 @@ func TestIsSemVer(t *testing.T) {
 		{"v0.0.1", true},
 		{"", false},        // 本地构建可能为空
 		{"(devel)", false}, // 本地构建占位
-		{"0.2.0", false},   // 缺 v 前缀
 		{"latest", false},
 		{"v1.2", false},     // 段数不足
 		{"v1.2.3.4", false}, // 段数超出
 		{"v1.x.3", false},   // 非数字段
+		// parseSemver 带来的宽容度: 无 v 前缀 / build metadata 也接受。
+		// go 模块版本恒带 v 前缀且不含 build metadata, 不影响 ResolveVersion 的安装方式判定
+		{"0.2.0", true},
+		{"v0.2.0+build.1", true},
 	}
 	for _, tt := range tests {
 		if got := isSemVer(tt.in); got != tt.want {

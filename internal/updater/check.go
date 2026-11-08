@@ -73,27 +73,13 @@ func repoSlug() string {
 	return parts[len(parts)-2] + "/" + parts[len(parts)-1]
 }
 
-// latestViaAPI 查询 GitHub Releases 的 latest release tag
+// latestViaAPI 查询 GitHub Releases 的 latest release tag, 复用 fetchRelease 的请求与解析
 func latestViaAPI(apiBase string) (string, error) {
-	if apiBase == "" {
-		apiBase = defaultAPIBase
-	}
-	url := strings.TrimRight(apiBase, "/") + "/repos/" + repoSlug() + "/releases/latest"
-
-	var release struct {
-		TagName string `json:"tag_name"`
-	}
-	resp, err := GetHTTPClient().R().SetResult(&release).Get(url)
+	rel, err := fetchRelease(apiBase, "")
 	if err != nil {
-		return "", fmt.Errorf("查询最新版本失败, 请检查网络: %w", err)
+		return "", err
 	}
-	if !resp.IsSuccess() {
-		return "", fmt.Errorf("查询最新版本失败: GitHub API 返回 %s", resp.Status())
-	}
-	if release.TagName == "" {
-		return "", fmt.Errorf("查询最新版本失败: 响应缺少 tag_name")
-	}
-	return release.TagName, nil
+	return rel.TagName, nil
 }
 
 // normalizeVersion 去掉前导 v/V, 用于版本号等值比较 ("v0.2.1" 与 "0.2.1" 等价)
