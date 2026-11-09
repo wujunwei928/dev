@@ -100,6 +100,8 @@ sql:
     password: ""
     db: ""
     charset: utf8mb4
+update:
+    api_base: https://api.github.com  # GitHub API endpoint override (default api.github.com), for proxy/mirror setups
 ```
 
 ## Dependencies

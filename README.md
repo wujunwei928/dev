@@ -179,6 +179,9 @@ sql:
     password: 123456        # 数据库密码
     db: novel               # 数据库名称
     charset: utf8mb4        # 字符类型
+update:
+# 更新配置
+    api_base: https://api.github.com  # GitHub API 端点, 默认 api.github.com, 代理/镜像场景可覆盖
 ```
 
 flag默认值, flag配置文件配置项, flag用户手动设置项 优先级说明: 
