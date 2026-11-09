@@ -8,10 +8,12 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/wujunwei928/dev/internal/updater"
 )
 
 var (
-	Version = "0.1.3" // 版本号
+	Version string // 版本号, release 构建经 -ldflags "-X github.com/wujunwei928/dev/cmd.Version=X.Y.Z" 注入, 平时留空
 
 	cfgFile string // 自定义配置路径, 类似 ~/.bashrc
 )
@@ -21,7 +23,7 @@ var rootCmd = &cobra.Command{
 	Use:     "dev",
 	Short:   "研发工具箱",
 	Long:    `研发工具箱`,
-	Version: Version, // 指定版本号: 会有 -v 和 --version 选项, 用于打印版本号
+	Version: updater.CurrentVersion(Version).Version, // 三级解析: ldflags 注入 > buildinfo 主模块版本 > devel+短commit, 会有 -v 和 --version 选项
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
@@ -50,6 +52,7 @@ func init() {
 	rootCmd.AddCommand(NewCmdHttp())    // http服务
 	rootCmd.AddCommand(NewCmdUrl())     // 打开网址，文件夹或文件
 	rootCmd.AddCommand(NewCmdGo())      // go相关
+	rootCmd.AddCommand(NewCmdUpdate())  // 更新检查与升级
 }
 
 func initConfig() {

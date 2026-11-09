@@ -3,6 +3,7 @@
       * [go install 安装](#go-install-安装)
       * [下载可执行文件](#下载可执行文件)
       * [使用docker](#使用docker)
+   * [更新](#更新)
    * [配置](#配置)
    * [命令列表](#命令列表)
       * [install: 安裝命令到指定PATH](#install-安裝命令到指定path)
@@ -33,6 +34,7 @@
 | open | 打开网址或文件夹 |
 | http | http服务: 在运行文件夹启动http服务, 支持下载文件和上传文件, 方便文件传输 |
 | install | 安装命令到PATH |
+| update | 自更新: 检查并安装新版本, 支持查询最新版本和安装指定版本回滚 |
 | encode | 字符串加密: md5, sha1, base64, url, unicode... |
 | decode | 字符串解密: base64, url, unicode |
 | time | 时间戳转时间, 时间转时间戳 |
@@ -80,12 +82,17 @@ go install github.com/wujunwei928/dev@latest
 ```
 
 ## 下载可执行文件
-下载指定系统平台的可执行文件压缩包
+下载指定系统平台的可执行文件压缩包, 命名格式: `dev_<版本>_<系统>_<架构>.tar.gz` (windows平台为.zip)
 下载地址: https://github.com/wujunwei928/dev/releases
 
 解压下载文件, windows没有tar命令, 可用图形解压软件
 ```bash
-tar -zxvf dev-*.tar.gz
+tar -zxvf dev_*.tar.gz
+```
+
+下载页同时提供 `checksums.txt` (sha256), 建议安装前先校验压缩包
+```bash
+sha256sum -c checksums.txt
 ```
 
 > 可以将文件mv到PATH路径, 如果不确定PATH, 可以使用命令的install子命令安装  
@@ -118,6 +125,38 @@ docker exec -it dev_test /bin/dev -h
 `127.0.0.1:8899`体验文件http服务  
 功能说明详见: [http: http服务](#http-http服务)
 
+> ps: docker渠道不走`dev update`自更新, 升级方式为重新`docker pull`镜像或自行构建  
+> 容器内即使更新成功, 结果也会随容器重建而失效
+
+## 更新
+`dev update` 会自动识别安装方式, 并选择对应的更新路径
+
+**go install 安装的**: 直接委托go install升级到最新版
+```bash
+dev update
+```
+
+**下载可执行文件安装的**: 从 GitHub Releases 下载当前平台的产物, sha256校验通过并冒烟测试后原子替换
+任一步失败旧版原位不动; windows下运行中的dev.exe也可以直接更新
+```bash
+dev update
+```
+
+**只查询最新版本, 不安装**
+```bash
+dev update --check
+```
+
+**安装指定版本, 可用于降级回滚**
+```bash
+dev update --version v0.2.0
+```
+
+**查看当前版本及构建来源**
+```bash
+dev --version
+```
+
 # 配置
 工具支持自定义配置, 检索相关命令
 默认配置路径: `$HOME/.dev.yaml`
@@ -140,6 +179,9 @@ sql:
     password: 123456        # 数据库密码
     db: novel               # 数据库名称
     charset: utf8mb4        # 字符类型
+update:
+# 更新配置
+    api_base: https://api.github.com  # GitHub API 端点, 默认 api.github.com, 代理/镜像场景可覆盖
 ```
 
 flag默认值, flag配置文件配置项, flag用户手动设置项 优先级说明: 
