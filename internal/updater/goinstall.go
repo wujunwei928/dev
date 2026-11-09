@@ -55,10 +55,10 @@ func updateGoInstall(opts UpdateOptions, execPath string) (UpdateResult, error) 
 	}
 	if want == "" {
 		// 裸更新: 版本必须与原来不同
-		if normalizeVersion(got) == normalizeVersion(opts.Current.Version) {
+		if eqVersion(got, opts.Current.Version) {
 			return UpdateResult{}, fmt.Errorf("go install 已执行, 但实测版本未变: 仍为 %s, 安装可能未生效", got)
 		}
-	} else if normalizeVersion(got) != normalizeVersion(want) {
+	} else if !eqVersion(got, want) {
 		// 指定版本: 实测必须与请求一致
 		return UpdateResult{}, fmt.Errorf("go install 已执行, 但实测版本为 %s, 期望 %s, 安装可能未生效", got, want)
 	}

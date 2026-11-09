@@ -159,32 +159,11 @@ func TestPickAssetGoreleaserNaming(t *testing.T) {
 	}
 }
 
-// 历史 Release 命名 (连字符, tag 无 v, windows 也是 tar.gz) 同样可选
-func TestPickAssetLegacyNaming(t *testing.T) {
-	rel := &releaseInfo{TagName: "0.1.3", Assets: []releaseAsset{
-		{Name: "dev-0.1.3-linux-amd64.tar.gz", BrowserDownloadURL: "https://example/linux"},
-		{Name: "dev-0.1.3-windows-amd64.tar.gz", BrowserDownloadURL: "https://example/win"},
-	}}
-
-	for _, c := range []struct{ goos, arch, wantURL string }{
-		{"linux", "amd64", "https://example/linux"},
-		{"windows", "amd64", "https://example/win"},
-	} {
-		a, err := pickAsset(rel, c.goos, c.arch)
-		if err != nil {
-			t.Fatalf("pickAsset(%s/%s) failed: %v", c.goos, c.arch, err)
-		}
-		if a.BrowserDownloadURL != c.wantURL {
-			t.Errorf("pickAsset(%s/%s) = %s, want %s", c.goos, c.arch, a.BrowserDownloadURL, c.wantURL)
-		}
-	}
-}
-
 // tag 带 v 而产物名无 v (goreleaser 用去 v 版本号) 时仍能匹配
 func TestPickAssetStripsVFromTagName(t *testing.T) {
 	rel := &releaseInfo{TagName: "v0.2.1", Assets: []releaseAsset{
 		{Name: "dev_0.2.1_windows_amd64.zip", BrowserDownloadURL: "https://example/win"},
-		{Name: "dev-0.2.1-darwin-arm64.tar.gz", BrowserDownloadURL: "https://example/mac"},
+		{Name: "dev_0.2.1_darwin_arm64.tar.gz", BrowserDownloadURL: "https://example/mac"},
 	}}
 
 	a, err := pickAsset(rel, "windows", "amd64")

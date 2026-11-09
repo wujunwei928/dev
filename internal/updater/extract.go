@@ -58,7 +58,7 @@ func extractFromTarGz(archivePath, destPath string) error {
 		if hdr.Typeflag != tar.TypeReg || filepath.Base(hdr.Name) != binaryName() {
 			continue
 		}
-		depth, err := archiveEntryPath(hdr.Name)
+		depth, err := archiveEntryDepth(hdr.Name)
 		if err != nil {
 			continue // 逃逸条目直接忽略, 继续找安全候选
 		}
@@ -92,7 +92,7 @@ func extractFromZip(archivePath, destPath string) error {
 		if filepath.Base(zf.Name) != binaryName() {
 			continue
 		}
-		depth, err := archiveEntryPath(zf.Name)
+		depth, err := archiveEntryDepth(zf.Name)
 		if err != nil {
 			continue // 逃逸条目直接忽略
 		}
@@ -116,8 +116,8 @@ func extractFromZip(archivePath, destPath string) error {
 	return nil
 }
 
-// archiveEntryPath 归一化归档条目路径并返回其深度; 含 .. 段或绝对路径时拒绝 (防 zip slip)
-func archiveEntryPath(name string) (int, error) {
+// archiveEntryDepth 归一化归档条目路径并返回其深度; 含 .. 段或绝对路径时拒绝 (防 zip slip)
+func archiveEntryDepth(name string) (int, error) {
 	if strings.ContainsAny(name, "\x00") {
 		return 0, fmt.Errorf("条目路径含非法字符: %q", name)
 	}

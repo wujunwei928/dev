@@ -32,7 +32,7 @@ func Check(current VersionInfo, apiBase string) (CheckResult, error) {
 	return CheckResult{
 		Current:  current.Version,
 		Latest:   latest,
-		UpToDate: normalizeVersion(current.Version) == normalizeVersion(latest),
+		UpToDate: eqVersion(current.Version, latest),
 	}, nil
 }
 

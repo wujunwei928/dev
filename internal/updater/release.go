@@ -79,16 +79,13 @@ func alternateTag(tag string) string {
 	return n
 }
 
-// pickAsset 按平台选择下载产物。
-// 兼容两代命名: goreleaser (dev_<ver>_<os>_<arch>.zip|.tar.gz, ver 无 v) 与
-// 历史手工发布 (dev-<tag>-<os>-<arch>.tar.gz); 同名候选按列表顺序优先
+// pickAsset 按平台选择下载产物 (goreleaser 命名 dev_<ver>_<os>_<arch>.zip|.tar.gz, ver 无 v);
+// 同名候选按列表顺序优先
 func pickAsset(rel *releaseInfo, goos, arch string) (*releaseAsset, error) {
 	ver := normalizeVersion(rel.TagName)
 	candidates := []string{
-		"dev_" + ver + "_" + goos + "_" + arch + ".zip", // goreleaser windows 首选
+		"dev_" + ver + "_" + goos + "_" + arch + ".zip",    // goreleaser windows 首选
 		"dev_" + ver + "_" + goos + "_" + arch + ".tar.gz", // goreleaser 其余平台 / 历史 windows
-		"dev-" + rel.TagName + "-" + goos + "-" + arch + ".tar.gz", // 历史 tag 原形
-		"dev-" + ver + "-" + goos + "-" + arch + ".tar.gz",
 	}
 	for _, want := range candidates {
 		for i := range rel.Assets {
@@ -101,7 +98,7 @@ func pickAsset(rel *releaseInfo, goos, arch string) (*releaseAsset, error) {
 }
 
 // findChecksumsAsset 返回 Release 中的 checksums.txt 产物。
-// 历史 Release 未上传该文件时 ok=false, 由调用方决定降级行为
+// Release 未上传该文件时 ok=false, 调用方按 sha256 校验硬性前提拒绝安装, 不再下载
 func findChecksumsAsset(rel *releaseInfo) (*releaseAsset, bool) {
 	for i := range rel.Assets {
 		if rel.Assets[i].Name == "checksums.txt" {

@@ -71,6 +71,11 @@ func isSemVer(s string) bool {
 	return ok
 }
 
+// eqVersion 报告两个版本号去 v/V 前缀后是否字面等价 ("v0.2.1" 与 "0.2.1" 等价)
+func eqVersion(a, b string) bool {
+	return normalizeVersion(a) == normalizeVersion(b)
+}
+
 // compareVersions 按 semver 次序比较 a 与 b: a<b 返回 -1, a>b 返回 1, 相等返回 0。
 // 接受 vX.Y.Z 与可选 -prerelease 后缀 (v 前缀可选); 任一方不可解析 (如 devel 形态) 时 ok=false,
 // 调用方按「无法判定新旧」处理。

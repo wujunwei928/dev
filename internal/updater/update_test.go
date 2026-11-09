@@ -159,7 +159,7 @@ func TestUpdateEndToEnd(t *testing.T) {
 			"latest": makeRelease(tag, archName, "checksums.txt"),
 		},
 		map[string][]byte{
-			archName:      archBytes,
+			archName:        archBytes,
 			"checksums.txt": []byte(checksumsFor(t, archName, archBytes)),
 		},
 	)
@@ -195,11 +195,11 @@ func TestUpdateEndToEnd(t *testing.T) {
 	}
 }
 
-// 历史 Release 形态 (连字符命名, tag 无 v, 无 checksums.txt) 缺校验文件时硬失败:
+// Release 缺 checksums.txt 时硬失败:
 // sha256 校验是安装的硬性前提, 缺失即拒绝, 旧版原位不动, 不做无谓下载
-func TestUpdateLegacyReleaseWithoutChecksumsHardFails(t *testing.T) {
+func TestUpdateReleaseWithoutChecksumsHardFails(t *testing.T) {
 	tag := "0.1.3"
-	archName := fmt.Sprintf("dev-%s-%s-%s.tar.gz", tag, runtime.GOOS, runtime.GOARCH)
+	archName := fmt.Sprintf("dev_%s_%s_%s.tar.gz", tag, runtime.GOOS, runtime.GOARCH)
 	archBytes := buildSelfArchive(t, archName)
 	site := newFakeSite(t,
 		map[string]releaseInfo{"latest": makeRelease(tag, archName)},
@@ -285,7 +285,7 @@ func TestUpdateLocalBuildProceeds(t *testing.T) {
 	site := newFakeSite(t,
 		map[string]releaseInfo{"latest": makeRelease(tag, archName, "checksums.txt")},
 		map[string][]byte{
-			archName:      archBytes,
+			archName:        archBytes,
 			"checksums.txt": []byte(checksumsFor(t, archName, archBytes)),
 		},
 	)
@@ -317,7 +317,7 @@ func TestUpdateDowngradeByTargetTag(t *testing.T) {
 	site := newFakeSite(t,
 		map[string]releaseInfo{"tags/v0.1.5": makeRelease(tag, archName, "checksums.txt")},
 		map[string][]byte{
-			archName:      archBytes,
+			archName:        archBytes,
 			"checksums.txt": []byte(checksumsFor(t, archName, archBytes)),
 		},
 	)
@@ -371,7 +371,7 @@ func TestUpdateChecksumMismatchKeepsOldBinary(t *testing.T) {
 	site := newFakeSite(t,
 		map[string]releaseInfo{"latest": makeRelease(tag, archName, "checksums.txt")},
 		map[string][]byte{
-			archName:      archBytes,
+			archName:        archBytes,
 			"checksums.txt": []byte(badChecksums),
 		},
 	)
@@ -402,7 +402,7 @@ func TestUpdateSmokeFailureKeepsOldBinary(t *testing.T) {
 	site := newFakeSite(t,
 		map[string]releaseInfo{"latest": makeRelease(tag, archName, "checksums.txt")},
 		map[string][]byte{
-			archName:      archBytes,
+			archName:        archBytes,
 			"checksums.txt": []byte(checksumsFor(t, archName, archBytes)),
 		},
 	)
@@ -434,7 +434,7 @@ func TestUpdateCleansStaleOldBinary(t *testing.T) {
 	site := newFakeSite(t,
 		map[string]releaseInfo{"latest": makeRelease(tag, archName, "checksums.txt")},
 		map[string][]byte{
-			archName:      archBytes,
+			archName:        archBytes,
 			"checksums.txt": []byte(checksumsFor(t, archName, archBytes)),
 		},
 	)
