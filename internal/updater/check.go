@@ -29,10 +29,16 @@ func Check(current VersionInfo, apiBase string) (CheckResult, error) {
 	if err != nil {
 		return CheckResult{}, err
 	}
+	// 与裸 update 的「已是最新」口径一致: current >= latest 均视为最新 (tag 回退/预发布场景),
+	// 版本串不可解析时回退等值比较, 保住「相等即最新」语义
+	upToDate := eqVersion(current.Version, latest)
+	if cmp, ok := compareVersions(current.Version, latest); ok {
+		upToDate = cmp >= 0
+	}
 	return CheckResult{
 		Current:  current.Version,
 		Latest:   latest,
-		UpToDate: eqVersion(current.Version, latest),
+		UpToDate: upToDate,
 	}, nil
 }
 

@@ -85,7 +85,7 @@ func pickAsset(rel *releaseInfo, goos, arch string) (*releaseAsset, error) {
 	ver := normalizeVersion(rel.TagName)
 	candidates := []string{
 		"dev_" + ver + "_" + goos + "_" + arch + ".zip",    // goreleaser windows 首选
-		"dev_" + ver + "_" + goos + "_" + arch + ".tar.gz", // goreleaser 其余平台 / 历史 windows
+		"dev_" + ver + "_" + goos + "_" + arch + ".tar.gz", // goreleaser 其余平台
 	}
 	for _, want := range candidates {
 		for i := range rel.Assets {

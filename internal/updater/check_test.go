@@ -119,6 +119,23 @@ func TestCheckReportsUpToDate(t *testing.T) {
 	}
 }
 
+// 当前版本比 latest 新 (tag 回退/预发布场景) 同样视为已是最新, 与裸 update 跳过下载的口径一致
+func TestCheckCurrentNewerThanLatestIsUpToDate(t *testing.T) {
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"tag_name": "v0.2.1"})
+	}))
+	defer ts.Close()
+
+	res, err := Check(VersionInfo{Method: MethodRelease, Version: "0.3.0"}, ts.URL)
+	if err != nil {
+		t.Fatalf("Check returned error: %v", err)
+	}
+	if !res.UpToDate {
+		t.Errorf("UpToDate = false, want true (current %q newer than latest %q)", res.Current, res.Latest)
+	}
+}
+
 // API 不可达时返回清晰错误
 func TestCheckAPIFailureReturnsClearError(t *testing.T) {
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
